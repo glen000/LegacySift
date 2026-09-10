@@ -1,35 +1,18 @@
 # Changelog
 
-## 0.2.1-alpha — 2026-09-10
+## 0.2.1-alpha
 
-- Rebuilt the main workflow so the cleanup step is always visible in a normal-size window; maximizing the app is no longer required to discover the primary action.
-- Placed OLD and CURRENT folder choices side by side to make the fixed direction easier to understand at a glance.
-- Renamed result groups to clearer outcome-based wording: **Not found in CURRENT / Possible different versions / Identical copies / Files not checked**.
-- Added a plain-language explanation inside every result tab.
-- Added an always-visible cleanup explanation that states exactly what will remain in OLD after cleanup.
-- Reworded the cleanup confirmation to list what will be removed and what will stay before any change is made.
-- Kept the recommended reversible Safety folder as the default cleanup method.
-- Preserved the existing comparison engine, SHA-256 matching, protected CURRENT-folder invariant, pre-cleanup revalidation and restore protections.
+Focused UX correction pass after the first real-world visual test.
 
-## 0.2.0-alpha — 2026-09-10
+- OLD and CURRENT folders are shown side-by-side with permanent roles.
+- CURRENT is clearly marked as protected/read-only.
+- The normal workflow no longer depends on vertical scrolling to discover cleanup.
+- Result categories now explain what happens to each group of files.
+- Cleanup explains what will remain in OLD before any modification is possible.
+- Cleanup confirmation lists identical copies, files not found in CURRENT, possible different versions, and unchecked files.
+- Fixed normal-window clipping that could hide the CURRENT-folder Browse button and the protected-folder reminder at some DPI/window sizes.
+- Comparison and cleanup safety logic remain unchanged.
 
-- Renamed project from FolderSift to **LegacySift**.
-- Reworked the main interface around plain-language migration steps.
-- Removed A/B terminology from the primary UI: **OLD folder** and **CURRENT protected folder** are now explicit.
-- Added clear protected/read-only messaging for the current folder.
-- Added English and Italian localization infrastructure.
-- Added Windows-language detection and a language selector.
-- Renamed user-facing "quarantine" wording to **Safety folder / Cartella di sicurezza**.
-- Moved less-common cleanup choices behind **Show other options**.
-- Reworded results as Files to keep / Versions to check / Already present / Problems.
-- Preserved SHA-256 exact-match behavior and pre-cleanup revalidation.
-- Preserved restore-without-overwrite behavior.
-- Kept `asInvoker` manifest: no administrator elevation requested.
+## 0.2.0-alpha
 
-## 0.1.0-alpha — 2026-09-09
-
-- Initial C# / WinForms proof of concept.
-- Exact duplicate detection across different names and paths.
-- Possible-version warning for same-name, different-content files.
-- Safety-folder cleanup and restore prototype.
-- Initial path protections and smoke tests.
+First native C#/.NET Framework prototype with exact-content comparison, reversible safety-folder cleanup, restore support, English/Italian UI, and Windows build/test automation.
