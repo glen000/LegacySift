@@ -1,24 +1,18 @@
 # Changelog
 
-## 0.2.0-alpha — 2026-09-10
+## 0.2.1-alpha
 
-- Renamed project from FolderSift to **LegacySift**.
-- Reworked the main interface around plain-language migration steps.
-- Removed A/B terminology from the primary UI: **OLD folder** and **CURRENT protected folder** are now explicit.
-- Added clear protected/read-only messaging for the current folder.
-- Added English and Italian localization infrastructure.
-- Added Windows-language detection and a language selector.
-- Renamed user-facing "quarantine" wording to **Safety folder / Cartella di sicurezza**.
-- Moved less-common cleanup choices behind **Show other options**.
-- Reworded results as Files to keep / Versions to check / Already present / Problems.
-- Preserved SHA-256 exact-match behavior and pre-cleanup revalidation.
-- Preserved restore-without-overwrite behavior.
-- Kept `asInvoker` manifest: no administrator elevation requested.
+Focused UX correction pass after the first real-world visual test.
 
-## 0.1.0-alpha — 2026-09-09
+- OLD and CURRENT folders are shown side-by-side with permanent roles.
+- CURRENT is clearly marked as protected/read-only.
+- The normal workflow no longer depends on vertical scrolling to discover cleanup.
+- Result categories now explain what happens to each group of files.
+- Cleanup explains what will remain in OLD before any modification is possible.
+- Cleanup confirmation lists identical copies, files not found in CURRENT, possible different versions, and unchecked files.
+- Fixed normal-window clipping that could hide the CURRENT-folder Browse button and the protected-folder reminder at some DPI/window sizes.
+- Comparison and cleanup safety logic remain unchanged.
 
-- Initial C# / WinForms proof of concept.
-- Exact duplicate detection across different names and paths.
-- Possible-version warning for same-name, different-content files.
-- Safety-folder cleanup and restore prototype.
-- Initial path protections and smoke tests.
+## 0.2.0-alpha
+
+First native C#/.NET Framework prototype with exact-content comparison, reversible safety-folder cleanup, restore support, English/Italian UI, and Windows build/test automation.
