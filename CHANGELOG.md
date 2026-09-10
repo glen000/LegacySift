@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.1-alpha — 2026-09-10
+
+- Rebuilt the main workflow so the cleanup step is always visible in a normal-size window; maximizing the app is no longer required to discover the primary action.
+- Placed OLD and CURRENT folder choices side by side to make the fixed direction easier to understand at a glance.
+- Renamed result groups to clearer outcome-based wording: **Not found in CURRENT / Possible different versions / Identical copies / Files not checked**.
+- Added a plain-language explanation inside every result tab.
+- Added an always-visible cleanup explanation that states exactly what will remain in OLD after cleanup.
+- Reworded the cleanup confirmation to list what will be removed and what will stay before any change is made.
+- Kept the recommended reversible Safety folder as the default cleanup method.
+- Preserved the existing comparison engine, SHA-256 matching, protected CURRENT-folder invariant, pre-cleanup revalidation and restore protections.
+
 ## 0.2.0-alpha — 2026-09-10
 
 - Renamed project from FolderSift to **LegacySift**.
