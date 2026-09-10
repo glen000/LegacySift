@@ -1,0 +1,46 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Release
+        shell: pwsh
+        run: msbuild LegacySift.sln /m /p:Configuration=Release /p:Platform="Any CPU"
+
+      - name: Run smoke tests
+        shell: pwsh
+        run: .\tests\LegacySift.Tests\bin\Release\LegacySift.Tests.exe
+
+      - name: Package portable build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item src\LegacySift\bin\Release\LegacySift.exe dist\LegacySift.exe
+          Copy-Item README.md dist\README.md
+          Copy-Item LICENSE dist\LICENSE.txt
+          Compress-Archive -Path dist\LegacySift.exe,dist\README.md,dist\LICENSE.txt -DestinationPath LegacySift-windows.zip -Force
+          (Get-FileHash LegacySift-windows.zip -Algorithm SHA256).Hash.ToLower() + "  LegacySift-windows.zip" | Set-Content LegacySift-windows.zip.sha256 -Encoding ascii
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LegacySift-windows
+          path: |
+            LegacySift-windows.zip
+            LegacySift-windows.zip.sha256
