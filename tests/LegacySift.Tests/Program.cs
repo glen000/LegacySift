@@ -1,7 +1,10 @@
 using LegacySift.Core;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace LegacySift.Tests
@@ -21,6 +24,7 @@ namespace LegacySift.Tests
                 TestRestoreDoesNotOverwrite(root);
                 TestPathSafety(root);
                 TestCriticalWording();
+                TestAllTranslations();
                 Console.WriteLine("PASS — " + _assertions + " assertions");
                 return 0;
             }
@@ -45,18 +49,11 @@ namespace LegacySift.Tests
             Directory.CreateDirectory(Path.Combine(source, "sub"));
             Directory.CreateDirectory(Path.Combine(reference, "elsewhere"));
 
-            // Identical content with different name and relative path.
             Write(Path.Combine(source, "sub", "old-name.txt"), "same-content");
             Write(Path.Combine(reference, "elsewhere", "new-name.txt"), "same-content");
-
-            // Same name, different content: must never be cleaned automatically.
             Write(Path.Combine(source, "contract.docx"), "old-version");
             Write(Path.Combine(reference, "contract.docx"), "new-version");
-
-            // Unique old file.
             Write(Path.Combine(source, "only-old.txt"), "only-in-old");
-
-            // Zero-byte exact duplicate.
             File.WriteAllBytes(Path.Combine(source, "zero-old.bin"), new byte[0]);
             File.WriteAllBytes(Path.Combine(reference, "zero-current.bin"), new byte[0]);
 
@@ -107,7 +104,6 @@ namespace LegacySift.Tests
             var cleanup = new CleanupEngine().Clean(analysis, CleanupMode.Quarantine, false, CancellationToken.None, null);
             Assert(cleanup.RemovedCount == 1, "setup cleanup should move one file");
 
-            // Recreate an unrelated file at the original path before restore.
             Write(Path.Combine(source, "duplicate.txt"), "new-file-created-after-cleanup");
             var restore = new CleanupEngine().RestoreQuarantine(cleanup.QuarantineRoot, CancellationToken.None, null);
             Assert(restore.RestoredCount == 0, "restore must not overwrite an existing file");
@@ -150,6 +146,41 @@ namespace LegacySift.Tests
             Assert(L10n.T("CleanupExplanation", "1", "2", "3", "4").Contains("VECCHIA"), "Italian cleanup explanation must say what remains in VECCHIA");
 
             L10n.SetLanguage(AppLanguage.English);
+        }
+
+        private static void TestAllTranslations()
+        {
+            var english = L10n.TranslationForTests(AppLanguage.English);
+            Assert(LanguageCatalog.All.Count == Enum.GetValues(typeof(AppLanguage)).Length, "language catalog must contain every AppLanguage value");
+            Assert(english.Count >= 100, "English baseline should contain the complete UI dictionary");
+
+            foreach (var info in LanguageCatalog.All)
+            {
+                var dict = L10n.TranslationForTests(info.Language);
+                Assert(dict != null, info.Code + " dictionary must exist");
+                Assert(dict.Count == english.Count, info.Code + " dictionary must have the same number of keys as English");
+                Assert(L10n.FromCode(L10n.ToCode(info.Language)) == info.Language, info.Code + " language code must round-trip");
+                Assert(!string.IsNullOrWhiteSpace(info.NativeName), info.Code + " must have a native language name");
+                Assert(!string.IsNullOrWhiteSpace(info.DisplayName) && info.DisplayName.Contains("[" + info.Code + "]"), info.Code + " display name must always contain a visible language code");
+
+                foreach (var pair in english)
+                {
+                    string translated;
+                    Assert(dict.TryGetValue(pair.Key, out translated), info.Code + " is missing key " + pair.Key);
+                    Assert(!string.IsNullOrWhiteSpace(translated), info.Code + " has an empty value for " + pair.Key);
+                    Assert(PlaceholderSet(pair.Value).SetEquals(PlaceholderSet(translated)), info.Code + " placeholder mismatch for " + pair.Key);
+                }
+            }
+
+            L10n.SetLanguage(AppLanguage.English);
+        }
+
+        private static HashSet<string> PlaceholderSet(string value)
+        {
+            var result = new HashSet<string>(StringComparer.Ordinal);
+            foreach (Match match in Regex.Matches(value ?? string.Empty, @"\{\d+\}"))
+                result.Add(match.Value);
+            return result;
         }
 
         private static void Write(string path, string content)

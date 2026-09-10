@@ -40,6 +40,12 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Localization.cs" />
+    <Compile Include="Localization.Base.cs" />
+    <Compile Include="Localization.ExtraSupport.cs" />
+    <Compile Include="Localization.Europe1.cs" />
+    <Compile Include="Localization.Europe2.cs" />
+    <Compile Include="Localization.Asia.cs" />
+    <Compile Include="LanguageCatalog.cs" />
     <Compile Include="SettingsStore.cs" />
     <Compile Include="LanguageDialog.cs" />
     <Compile Include="MainForm.cs" />
