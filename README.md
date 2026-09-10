@@ -26,7 +26,13 @@ During comparison, nothing is modified. Exact duplicates can later be moved out 
 
 ## Languages
 
-The first development build includes English and Italian. The UI text is separated from the comparison engine so more languages can be added without changing the safety logic.
+The current alpha includes 14 interface languages:
+
+English, Italian, German, French, Spanish, Portuguese, Polish, Dutch, Turkish, Russian, Ukrainian, Simplified Chinese, Japanese and Hindi.
+
+LegacySift follows the Windows UI language when it is supported and otherwise uses English. The language chooser deliberately stays easy to recover: it always shows a lightweight flag, the language's own name, its English name and a visible language code. The entry point remains **Language / Lingua** even when the rest of the interface uses another language.
+
+Arabic is planned separately because right-to-left layout needs to be designed and tested rather than treated as a text-only translation.
 
 ## Status
 
