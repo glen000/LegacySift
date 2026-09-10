@@ -140,13 +140,16 @@ namespace LegacySift
             var folderPair = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                AutoSize = true,
+                AutoSize = false,
+                Height = 108,
                 ColumnCount = 2,
                 RowCount = 1,
-                Margin = new Padding(0)
+                Margin = new Padding(0),
+                GrowStyle = TableLayoutPanelGrowStyle.FixedSize
             };
             folderPair.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             folderPair.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            folderPair.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             var oldPanel = CreateFolderPanel(
                 L10n.T("OldTitle"),
@@ -277,7 +280,7 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 ColumnCount = 1,
-                RowCount = 4,
+                RowCount = 5,
                 Margin = new Padding(0)
             };
 
@@ -359,18 +362,25 @@ namespace LegacySift
             _confirmCheck.CheckedChanged += (s, e) => UpdateCleanupEnabled();
             cleanupLayout.Controls.Add(_confirmCheck, 0, 2);
 
-            var bottomRow = new TableLayoutPanel
+            var protectedReminder = new Label
+            {
+                AutoSize = true,
+                Dock = DockStyle.Fill,
+                Text = L10n.T("ProtectedReminder"),
+                ForeColor = Color.FromArgb(27, 94, 32),
+                Font = new Font(Font, FontStyle.Bold),
+                Margin = new Padding(3, 2, 3, 4)
+            };
+            cleanupLayout.Controls.Add(protectedReminder, 0, 3);
+
+            var cleanupButtons = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 AutoSize = true,
-                ColumnCount = 2,
-                RowCount = 1,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
                 Margin = new Padding(0)
             };
-            bottomRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            bottomRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-
-            var cleanupButtons = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false, Margin = new Padding(0) };
             _cleanupButton = new Button
             {
                 Text = L10n.T("Cleanup"),
@@ -391,18 +401,7 @@ namespace LegacySift
             _restoreButton.Click += async (s, e) => await RestoreQuarantineAsync();
             cleanupButtons.Controls.Add(_cleanupButton);
             cleanupButtons.Controls.Add(_restoreButton);
-            bottomRow.Controls.Add(cleanupButtons, 0, 0);
-
-            var protectedReminder = new Label
-            {
-                AutoSize = true,
-                Text = L10n.T("ProtectedReminder"),
-                ForeColor = Color.FromArgb(27, 94, 32),
-                Font = new Font(Font, FontStyle.Bold),
-                Margin = new Padding(8, 11, 0, 0)
-            };
-            bottomRow.Controls.Add(protectedReminder, 1, 0);
-            cleanupLayout.Controls.Add(bottomRow, 0, 3);
+            cleanupLayout.Controls.Add(cleanupButtons, 0, 4);
 
             cleanupBox.Controls.Add(cleanupLayout);
             return cleanupBox;
@@ -421,14 +420,24 @@ namespace LegacySift
             var panel = new Panel
             {
                 Dock = DockStyle.Fill,
-                AutoSize = true,
+                AutoSize = false,
                 BackColor = background,
                 Padding = new Padding(10),
                 MinimumSize = new Size(0, 105)
             };
-            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 2, RowCount = 3 };
+            var layout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoSize = false,
+                ColumnCount = 2,
+                RowCount = 3,
+                GrowStyle = TableLayoutPanelGrowStyle.FixedSize
+            };
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 92F));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             panel.Controls.Add(layout);
 
             var header = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = true, Margin = new Padding(0) };
@@ -446,7 +455,14 @@ namespace LegacySift
             layout.Controls.Add(header, 0, 0);
             layout.SetColumnSpan(header, 2);
 
-            var desc = new Label { AutoSize = true, Dock = DockStyle.Fill, Text = description, Margin = new Padding(0, 3, 0, 1) };
+            var desc = new Label
+            {
+                AutoSize = false,
+                Dock = DockStyle.Fill,
+                Text = description,
+                Margin = new Padding(0, 3, 0, 1),
+                TextAlign = ContentAlignment.TopLeft
+            };
             layout.Controls.Add(desc, 0, 1);
             layout.SetColumnSpan(desc, 2);
 
@@ -520,96 +536,81 @@ namespace LegacySift
             using (var dialog = new LanguageDialog(L10n.CurrentLanguage))
             {
                 if (dialog.ShowDialog(this) != DialogResult.OK || dialog.SelectedLanguage == L10n.CurrentLanguage) return;
-                if (MessageBox.Show(this, L10n.T("LanguageRestart"), L10n.T("LanguageRestartTitle"), MessageBoxButtons.OKCancel, MessageBoxIcon.Information) != DialogResult.OK) return;
+                L10n.CurrentLanguage = dialog.SelectedLanguage;
                 SettingsStore.SaveLanguage(dialog.SelectedLanguage);
+                MessageBox.Show(this, L10n.T("LanguageRestart"), L10n.T("LanguageRestartTitle"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Application.Restart();
             }
         }
 
-        private void ToggleOtherOptions()
-        {
-            _otherOptionsPanel.Visible = !_otherOptionsPanel.Visible;
-            _otherOptionsLink.Text = _otherOptionsPanel.Visible ? L10n.T("HideOptions") : L10n.T("OtherOptions");
-        }
-
         private void BrowseSource(object sender, EventArgs e)
         {
-            var p = ChooseFolder(_sourceBox.Text, L10n.T("ChooseOldDialog"));
-            if (p != null) _sourceBox.Text = p;
+            using (var dialog = new FolderBrowserDialog { Description = L10n.T("ChooseOldDialog"), ShowNewFolderButton = false })
+            {
+                if (dialog.ShowDialog(this) == DialogResult.OK) _sourceBox.Text = dialog.SelectedPath;
+            }
         }
 
         private void BrowseReference(object sender, EventArgs e)
         {
-            var p = ChooseFolder(_referenceBox.Text, L10n.T("ChooseCurrentDialog"));
-            if (p != null) _referenceBox.Text = p;
-        }
-
-        private string ChooseFolder(string initial, string description)
-        {
-            using (var dlg = new FolderBrowserDialog { Description = description, ShowNewFolderButton = false })
+            using (var dialog = new FolderBrowserDialog { Description = L10n.T("ChooseCurrentDialog"), ShowNewFolderButton = false })
             {
-                if (!string.IsNullOrWhiteSpace(initial) && Directory.Exists(initial)) dlg.SelectedPath = initial;
-                return dlg.ShowDialog(this) == DialogResult.OK ? dlg.SelectedPath : null;
+                if (dialog.ShowDialog(this) == DialogResult.OK) _referenceBox.Text = dialog.SelectedPath;
             }
         }
 
         private void PathsChanged(object sender, EventArgs e)
         {
-            if (_busy) return;
+            if (_analysis == null) return;
             _analysis = null;
             _confirmCheck.Checked = false;
             _confirmCheck.Enabled = false;
-            _lastReportPath = null;
-            _reportButton.Enabled = false;
-            ClearGrids();
+            _reportButton.Enabled = !string.IsNullOrEmpty(_lastReportPath) && File.Exists(_lastReportPath);
             _summaryLabel.Text = L10n.T("PathsChanged");
             _cleanupExplanationLabel.Text = L10n.T("CleanupBeforeAnalysis");
-            _cleanupButton.Text = L10n.T("Cleanup");
+            ClearGrids();
             UpdateCleanupEnabled();
         }
 
         private async Task AnalyzeAsync()
         {
             var error = PathSafety.ValidatePair(_sourceBox.Text, _referenceBox.Text);
-            if (error != null)
+            if (!string.IsNullOrEmpty(error))
             {
                 MessageBox.Show(this, error, L10n.T("PathCheckTitle"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            var sourcePath = _sourceBox.Text;
-            var referencePath = _referenceBox.Text;
             SetBusy(true);
             _analysis = null;
             _confirmCheck.Checked = false;
             _confirmCheck.Enabled = false;
             ClearGrids();
             _summaryLabel.Text = L10n.T("CheckingNow");
-            _cleanupExplanationLabel.Text = L10n.T("CleanupWaitForAnalysis");
+            _cleanupExplanationLabel.Text = L10n.T("CleanupBeforeAnalysis");
             _cts = new CancellationTokenSource();
+            var progress = new Progress<ProgressInfo>(UpdateProgress);
+
             try
             {
                 var engine = new ComparisonEngine();
-                var progress = new Progress<ProgressInfo>(UpdateProgress);
-                _analysis = await Task.Run(() => engine.Analyze(sourcePath, referencePath, _cts.Token, p => ((IProgress<ProgressInfo>)progress).Report(p)));
-                BindAnalysis(_analysis);
-                _lastReportPath = ReportWriter.WriteAnalysisReport(_analysis);
+                var result = await Task.Run(() => engine.Analyze(_sourceBox.Text, _referenceBox.Text, _cts.Token, p => ((IProgress<ProgressInfo>)progress).Report(p)));
+                _analysis = result;
+                BindAnalysis(result);
+                _lastReportPath = ReportWriter.WriteAnalysis(result);
                 _reportButton.Enabled = true;
+                _confirmCheck.Enabled = result.ExactDuplicateCount > 0;
                 _statusLabel.Text = L10n.T("AnalyzeDone");
                 _progress.Value = 100;
             }
             catch (OperationCanceledException)
             {
                 _statusLabel.Text = L10n.T("AnalyzeCanceled");
-                _summaryLabel.Text = L10n.T("NoAnalysis");
-                _cleanupExplanationLabel.Text = L10n.T("CleanupBeforeAnalysis");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, L10n.T("AnalyzeErrorTitle"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 _statusLabel.Text = L10n.T("AnalyzeErrorStatus");
-                _summaryLabel.Text = L10n.T("NoAnalysis");
-                _cleanupExplanationLabel.Text = L10n.T("CleanupBeforeAnalysis");
+                MessageBox.Show(this, ex.Message, L10n.T("AnalyzeErrorTitle"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -620,12 +621,11 @@ namespace LegacySift
 
         private async Task CleanupAsync()
         {
-            if (_analysis == null || !_confirmCheck.Checked) return;
+            if (_analysis == null || _analysis.ExactDuplicateCount == 0) return;
+            if (!_confirmCheck.Checked) return;
 
             var mode = _recycleRadio.Checked ? CleanupMode.RecycleBin : CleanupMode.Quarantine;
-            var removeEmptyFolders = _removeEmptyCheck.Checked;
-            var modeName = mode == CleanupMode.Quarantine ? L10n.T("ModeSafety") : L10n.T("ModeRecycle");
-            var message = L10n.T(
+            var confirm = L10n.T(
                 "CleanupConfirm",
                 _analysis.SourceRoot,
                 _analysis.ReferenceRoot,
@@ -633,75 +633,77 @@ namespace LegacySift
                 _analysis.UniqueCount.ToString("N0"),
                 _analysis.PossibleVersionCount.ToString("N0"),
                 _analysis.ErrorCount.ToString("N0"),
-                modeName);
+                mode == CleanupMode.Quarantine ? L10n.T("ModeSafety") : L10n.T("ModeRecycle"));
 
-            if (MessageBox.Show(this, message, L10n.T("CleanupConfirmTitle"), MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+            if (MessageBox.Show(this, confirm, L10n.T("CleanupConfirmTitle"), MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
                 return;
 
             SetBusy(true);
             _cts = new CancellationTokenSource();
+            var progress = new Progress<ProgressInfo>(UpdateProgress);
+
             try
             {
-                var engine = new CleanupEngine();
-                var progress = new Progress<ProgressInfo>(UpdateProgress);
-                var cleanup = await Task.Run(() => engine.Clean(_analysis, mode, removeEmptyFolders, _cts.Token, p => ((IProgress<ProgressInfo>)progress).Report(p)));
-                _lastQuarantineRoot = cleanup.QuarantineRoot;
-                _statusLabel.Text = L10n.T("CleanupDoneStatus", cleanup.RemovedCount.ToString("N0"), cleanup.SkippedCount.ToString("N0"));
-                _progress.Value = 100;
+                var result = await Task.Run(() => CleanupEngine.Cleanup(
+                    _analysis,
+                    mode,
+                    _removeEmptyCheck.Checked,
+                    _cts.Token,
+                    p => ((IProgress<ProgressInfo>)progress).Report(p)));
 
-                var safetyPart = string.IsNullOrEmpty(cleanup.QuarantineRoot)
+                _lastReportPath = ReportWriter.WriteCleanup(result);
+                _reportButton.Enabled = true;
+                if (!string.IsNullOrEmpty(result.QuarantineRoot)) _lastQuarantineRoot = result.QuarantineRoot;
+
+                _statusLabel.Text = L10n.T("CleanupDoneStatus", result.RemovedCount, result.SkippedCount);
+                var extra = string.IsNullOrEmpty(result.QuarantineRoot)
                     ? string.Empty
-                    : L10n.T("CleanupSafetyLocation", cleanup.QuarantineRoot);
-                var details = L10n.T("CleanupDone", cleanup.RemovedCount.ToString("N0"), cleanup.SkippedCount.ToString("N0"), safetyPart);
-                MessageBox.Show(this, details, L10n.T("CleanupDoneTitle"), MessageBoxButtons.OK, cleanup.ErrorCount == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                    : L10n.T("CleanupSafetyLocation", result.QuarantineRoot);
+                MessageBox.Show(this,
+                    L10n.T("CleanupDone", result.RemovedCount, result.SkippedCount, extra),
+                    L10n.T("CleanupDoneTitle"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
 
                 _analysis = null;
                 _confirmCheck.Checked = false;
                 _confirmCheck.Enabled = false;
-                _cleanupButton.Text = L10n.T("Cleanup");
+                _summaryLabel.Text = L10n.T("RunAgainAfterCleanup");
+                _cleanupExplanationLabel.Text = L10n.T("CleanupBeforeAnalysis");
                 ClearGrids();
-                _summaryLabel.Text = L10n.T("AfterCleanupSummary", cleanup.RemovedCount.ToString("N0"), cleanup.SkippedCount.ToString("N0"));
-                _cleanupExplanationLabel.Text = L10n.T("CleanupNeedsNewCheck");
-                UpdateCleanupEnabled();
             }
             catch (OperationCanceledException)
             {
                 _statusLabel.Text = L10n.T("CleanupCanceled");
-                _analysis = null;
-                _confirmCheck.Checked = false;
-                _confirmCheck.Enabled = false;
-                _cleanupExplanationLabel.Text = L10n.T("CleanupNeedsNewCheck");
-                UpdateCleanupEnabled();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, L10n.T("CleanupErrorTitle"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 _statusLabel.Text = L10n.T("CleanupErrorStatus");
-                _analysis = null;
-                _confirmCheck.Checked = false;
-                _confirmCheck.Enabled = false;
-                _cleanupExplanationLabel.Text = L10n.T("CleanupNeedsNewCheck");
-                UpdateCleanupEnabled();
+                MessageBox.Show(this, ex.Message, L10n.T("CleanupErrorTitle"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
                 SetBusy(false);
+                UpdateCleanupEnabled();
             }
         }
 
         private async Task RestoreQuarantineAsync()
         {
-            string root = null;
+            string selected = null;
             if (!string.IsNullOrEmpty(_lastQuarantineRoot) && Directory.Exists(_lastQuarantineRoot))
             {
-                var useLast = MessageBox.Show(this, L10n.T("RestoreLast", _lastQuarantineRoot), L10n.T("RestoreTitle"), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-                if (useLast == DialogResult.Cancel) return;
-                if (useLast == DialogResult.Yes) root = _lastQuarantineRoot;
+                if (MessageBox.Show(this, L10n.T("RestoreLast", _lastQuarantineRoot), L10n.T("RestoreTitle"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    selected = _lastQuarantineRoot;
             }
-            if (root == null)
+
+            if (selected == null)
             {
-                root = ChooseFolder(string.Empty, L10n.T("RestoreChoose"));
-                if (root == null) return;
+                using (var dialog = new FolderBrowserDialog { Description = L10n.T("RestoreChoose"), ShowNewFolderButton = false })
+                {
+                    if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                    selected = dialog.SelectedPath;
+                }
             }
 
             if (MessageBox.Show(this, L10n.T("RestoreConfirm"), L10n.T("RestoreConfirmTitle"), MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
@@ -709,18 +711,16 @@ namespace LegacySift
 
             SetBusy(true);
             _cts = new CancellationTokenSource();
+            var progress = new Progress<ProgressInfo>(UpdateProgress);
             try
             {
-                var engine = new CleanupEngine();
-                var progress = new Progress<ProgressInfo>(UpdateProgress);
-                var restored = await Task.Run(() => engine.RestoreQuarantine(root, _cts.Token, p => ((IProgress<ProgressInfo>)progress).Report(p)));
-                _progress.Value = 100;
-                _statusLabel.Text = L10n.T("RestoreDoneStatus", restored.RestoredCount.ToString("N0"), restored.ConflictCount.ToString("N0"));
+                var result = await Task.Run(() => CleanupEngine.Restore(selected, _cts.Token, p => ((IProgress<ProgressInfo>)progress).Report(p)));
+                _statusLabel.Text = L10n.T("RestoreDoneStatus", result.RestoredCount, result.ConflictCount);
                 MessageBox.Show(this,
-                    L10n.T("RestoreDone", restored.RestoredCount.ToString("N0"), restored.ConflictCount.ToString("N0"), restored.ErrorCount.ToString("N0")),
+                    L10n.T("RestoreDone", result.RestoredCount, result.ConflictCount, result.ErrorCount),
                     L10n.T("RestoreTitle"),
                     MessageBoxButtons.OK,
-                    restored.ErrorCount == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                    result.ErrorCount == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
             }
             catch (OperationCanceledException)
             {
@@ -754,25 +754,25 @@ namespace LegacySift
             _resultsTabs.TabPages[1].Text = L10n.T("TabVersions") + " (" + result.PossibleVersionCount.ToString("N0") + ")";
             _resultsTabs.TabPages[2].Text = L10n.T("TabDuplicates") + " (" + result.ExactDuplicateCount.ToString("N0") + ")";
             _resultsTabs.TabPages[3].Text = L10n.T("TabProblems") + " (" + result.ErrorCount.ToString("N0") + ")";
-            _resultsTabs.SelectedIndex = result.UniqueCount > 0 ? 0 : (result.PossibleVersionCount > 0 ? 1 : (result.ErrorCount > 0 ? 3 : 2));
+            _resultsTabs.SelectedIndex = result.UniqueCount > 0 ? 0 : (result.PossibleVersionCount > 0 ? 1 : 2);
 
             _summaryLabel.Text = L10n.T(
                 "Summary",
-                result.UniqueCount.ToString("N0"),
-                result.PossibleVersionCount.ToString("N0"),
+                result.SourceFileCount.ToString("N0"),
+                result.ReferenceFileCount.ToString("N0"),
                 result.ExactDuplicateCount.ToString("N0"),
                 FormatBytes(result.DuplicateBytes),
+                result.UniqueCount.ToString("N0"),
+                result.PossibleVersionCount.ToString("N0"),
                 result.ErrorCount.ToString("N0"));
 
             _cleanupExplanationLabel.Text = L10n.T(
-                "CleanupExplanation",
+                "CleanupAfterAnalysis",
+                result.ExactDuplicateCount.ToString("N0"),
                 result.UniqueCount.ToString("N0"),
                 result.PossibleVersionCount.ToString("N0"),
-                result.ErrorCount.ToString("N0"),
-                result.ExactDuplicateCount.ToString("N0"));
-
+                result.ErrorCount.ToString("N0"));
             _cleanupButton.Text = L10n.T("CleanupCount", result.ExactDuplicateCount.ToString("N0"));
-            _confirmCheck.Enabled = result.ExactDuplicateCount > 0;
         }
 
         private ResultGridRow ToGridRow(ComparisonItem item)
@@ -825,7 +825,6 @@ namespace LegacySift
             _referenceBrowseButton.Enabled = !busy;
             _languageButton.Enabled = !busy;
             _cleanupButton.Enabled = false;
-            _confirmCheck.Enabled = !busy && _analysis != null && _analysis.ExactDuplicateCount > 0;
             _restoreButton.Enabled = !busy;
             _cancelButton.Enabled = busy;
             if (busy)
@@ -842,9 +841,13 @@ namespace LegacySift
 
         private void UpdateCleanupEnabled()
         {
-            var canConfirm = !_busy && _analysis != null && _analysis.ExactDuplicateCount > 0;
-            _confirmCheck.Enabled = canConfirm;
-            _cleanupButton.Enabled = canConfirm && _confirmCheck.Checked;
+            _cleanupButton.Enabled = !_busy && _analysis != null && _analysis.ExactDuplicateCount > 0 && _confirmCheck.Checked;
+        }
+
+        private void ToggleOtherOptions()
+        {
+            _otherOptionsPanel.Visible = !_otherOptionsPanel.Visible;
+            _otherOptionsLink.Text = _otherOptionsPanel.Visible ? L10n.T("HideOptions") : L10n.T("OtherOptions");
         }
 
         private void OpenReport()
