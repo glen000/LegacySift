@@ -33,6 +33,15 @@ namespace LegacySift
 
         public static string T(string key, params object[] args)
         {
+            // Language recovery controls deliberately stay bilingual and script-independent.
+            // A user who accidentally chooses an unfamiliar language must still be able to find the way back.
+            if (string.Equals(key, "LanguageButton", StringComparison.Ordinal))
+                return "Language / Lingua…";
+            if (string.Equals(key, "LanguageRestartTitle", StringComparison.Ordinal))
+                return "Language / Lingua";
+            if (string.Equals(key, "LanguageRestart", StringComparison.Ordinal))
+                return "LegacySift will restart to apply the selected language. Current results will be cleared.\n\nLegacySift verrà riavviato per applicare la lingua scelta. I risultati attuali verranno azzerati.";
+
             string value;
             var dict = GetDictionary(CurrentLanguage);
             if (!dict.TryGetValue(key, out value))
