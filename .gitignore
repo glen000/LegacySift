@@ -1,0 +1,10 @@
+.vs/
+*.user
+*.suo
+[Bb]in/
+[Oo]bj/
+packages/
+*.pdb
+*.zip
+*.sha256
+TestResults/
