@@ -20,6 +20,7 @@ namespace LegacySift.Tests
                 TestAnalyzeCleanupAndRestore(root);
                 TestRestoreDoesNotOverwrite(root);
                 TestPathSafety(root);
+                TestCriticalWording();
                 Console.WriteLine("PASS — " + _assertions + " assertions");
                 return 0;
             }
@@ -44,11 +45,18 @@ namespace LegacySift.Tests
             Directory.CreateDirectory(Path.Combine(source, "sub"));
             Directory.CreateDirectory(Path.Combine(reference, "elsewhere"));
 
+            // Identical content with different name and relative path.
             Write(Path.Combine(source, "sub", "old-name.txt"), "same-content");
             Write(Path.Combine(reference, "elsewhere", "new-name.txt"), "same-content");
+
+            // Same name, different content: must never be cleaned automatically.
             Write(Path.Combine(source, "contract.docx"), "old-version");
             Write(Path.Combine(reference, "contract.docx"), "new-version");
+
+            // Unique old file.
             Write(Path.Combine(source, "only-old.txt"), "only-in-old");
+
+            // Zero-byte exact duplicate.
             File.WriteAllBytes(Path.Combine(source, "zero-old.bin"), new byte[0]);
             File.WriteAllBytes(Path.Combine(reference, "zero-current.bin"), new byte[0]);
 
@@ -56,7 +64,9 @@ namespace LegacySift.Tests
             var protectedBytesBefore = File.ReadAllBytes(protectedFile);
             var protectedWriteBefore = File.GetLastWriteTimeUtc(protectedFile);
 
-            var analysis = new ComparisonEngine().Analyze(source, reference, CancellationToken.None, null);
+            var engine = new ComparisonEngine();
+            var analysis = engine.Analyze(source, reference, CancellationToken.None, null);
+
             Assert(analysis.ExactDuplicateCount == 2, "must find 2 exact duplicates");
             Assert(analysis.PossibleVersionCount == 1, "must find 1 possible different version");
             Assert(analysis.UniqueCount == 1, "must find 1 file to keep");
@@ -89,6 +99,7 @@ namespace LegacySift.Tests
             var reference = Path.Combine(caseRoot, "CURRENT");
             Directory.CreateDirectory(source);
             Directory.CreateDirectory(reference);
+
             Write(Path.Combine(source, "duplicate.txt"), "identical");
             Write(Path.Combine(reference, "copy.txt"), "identical");
 
@@ -96,6 +107,7 @@ namespace LegacySift.Tests
             var cleanup = new CleanupEngine().Clean(analysis, CleanupMode.Quarantine, false, CancellationToken.None, null);
             Assert(cleanup.RemovedCount == 1, "setup cleanup should move one file");
 
+            // Recreate an unrelated file at the original path before restore.
             Write(Path.Combine(source, "duplicate.txt"), "new-file-created-after-cleanup");
             var restore = new CleanupEngine().RestoreQuarantine(cleanup.QuarantineRoot, CancellationToken.None, null);
             Assert(restore.RestoredCount == 0, "restore must not overwrite an existing file");
@@ -123,6 +135,21 @@ namespace LegacySift.Tests
             try { PathSafety.GetRelativePath(a, Path.Combine(b, "outside.txt")); }
             catch (InvalidOperationException) { outsideBlocked = true; }
             Assert(outsideBlocked, "cleanup path helper must reject a file outside OLD");
+        }
+
+        private static void TestCriticalWording()
+        {
+            L10n.SetLanguage(AppLanguage.English);
+            Assert(L10n.T("TabRecover").Contains("CURRENT"), "English result label must explain where the file was not found");
+            Assert(L10n.T("TabDuplicates").Contains("IDENTICAL"), "English duplicate label must say identical copies");
+            Assert(L10n.T("CleanupExplanation", "1", "2", "3", "4").Contains("OLD"), "English cleanup explanation must say what remains in OLD");
+
+            L10n.SetLanguage(AppLanguage.Italian);
+            Assert(L10n.T("TabRecover").Contains("ATTUALE"), "Italian result label must explain where the file was not found");
+            Assert(L10n.T("TabDuplicates").Contains("IDENTICHE"), "Italian duplicate label must say identical copies");
+            Assert(L10n.T("CleanupExplanation", "1", "2", "3", "4").Contains("VECCHIA"), "Italian cleanup explanation must say what remains in VECCHIA");
+
+            L10n.SetLanguage(AppLanguage.English);
         }
 
         private static void Write(string path, string content)
