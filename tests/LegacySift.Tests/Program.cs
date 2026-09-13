@@ -333,7 +333,7 @@ namespace LegacySift.Tests
                 {
                     "LanguageButton", "MainTabs", "WorkPage", "OldPanel", "CurrentPanel", "OldBrowseButton",
                     "CurrentBrowseButton", "AnalyzeButton", "ResultsTabs", "CleanupGroup", "SafetyFolderRadio",
-                    "ConfirmCheck", "CleanupButton", "RestoreButton", "ProtectedReminder", "HelpText"
+                    "ConfirmCheck", "CleanupButton", "RestoreButton", "ProtectedReminder", "SummaryLabel", "HelpText"
                 };
                 foreach (var name in required)
                 {
@@ -350,6 +350,7 @@ namespace LegacySift.Tests
                 Assert(ButtonTextFits((Button)Find(form, "CurrentBrowseButton"), 12), prefix + "CURRENT Browse text must fit");
                 Assert(ButtonTextFits((Button)Find(form, "AnalyzeButton"), 16), prefix + "check button text must fit");
                 Assert(ButtonTextFits((Button)Find(form, "CleanupButton"), 16), prefix + "cleanup button text must fit");
+                Assert(LabelTextFits((Label)Find(form, "SummaryLabel")), prefix + "summary text must fit");
                 Assert(Find(form, "HelpText").Text.Length > 300, prefix + "guide and safety text must be present");
 
                 if (state == LayoutTestState.OtherOptionsExpanded)
@@ -435,6 +436,13 @@ namespace LegacySift.Tests
         {
             var measured = TextRenderer.MeasureText(button.Text ?? string.Empty, button.Font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine).Width;
             return measured <= button.ClientSize.Width - horizontalPadding + 8;
+        }
+
+        private static bool LabelTextFits(Label label)
+        {
+            var proposed = new Size(System.Math.Max(1, label.ClientSize.Width), int.MaxValue);
+            var measured = TextRenderer.MeasureText(label.Text ?? string.Empty, label.Font, proposed, TextFormatFlags.WordBreak);
+            return measured.Height <= label.ClientSize.Height + 8;
         }
 
         private sealed class LayoutConfiguration

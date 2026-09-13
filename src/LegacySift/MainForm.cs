@@ -268,7 +268,8 @@ namespace LegacySift
             {
                 Name = "SummaryPanel",
                 Dock = DockStyle.Fill,
-                AutoSize = true,
+                AutoSize = false,
+                Height = 54,
                 BackColor = Color.FromArgb(245, 247, 250),
                 Padding = new Padding(7, 4, 7, 4),
                 Margin = new Padding(0, 1, 0, 3)
@@ -276,10 +277,11 @@ namespace LegacySift
             _summaryLabel = new Label
             {
                 Name = "SummaryLabel",
-                AutoSize = true,
+                AutoSize = false,
                 Dock = DockStyle.Fill,
                 Text = L10n.T("NoAnalysis"),
-                Font = new Font(Font.FontFamily, 9F, FontStyle.Bold)
+                Font = new Font(Font.FontFamily, 9F, FontStyle.Bold),
+                TextAlign = ContentAlignment.TopLeft
             };
             summaryPanel.Controls.Add(_summaryLabel);
             outer.Controls.Add(summaryPanel, 0, 3);
