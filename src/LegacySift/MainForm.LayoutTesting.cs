@@ -30,7 +30,10 @@ namespace LegacySift
 
             SuspendLayout();
             if (System.Math.Abs(scaleFactor - 1F) > 0.001F)
+            {
                 ScaleFonts(this, scaleFactor);
+                ScaleAbsoluteTableStyles(this, scaleFactor);
+            }
             ClientSize = clientSize;
 
             if ((int)state >= (int)LayoutTestState.FoldersSelected)
@@ -144,6 +147,23 @@ namespace LegacySift
             fonts.Add(new KeyValuePair<Control, Font>(control, control.Font));
             foreach (Control child in control.Controls)
                 CollectFonts(child, fonts);
+        }
+
+        private static void ScaleAbsoluteTableStyles(Control control, float factor)
+        {
+            var table = control as TableLayoutPanel;
+            if (table != null)
+            {
+                foreach (ColumnStyle style in table.ColumnStyles)
+                    if (style.SizeType == SizeType.Absolute)
+                        style.Width *= factor;
+                foreach (RowStyle style in table.RowStyles)
+                    if (style.SizeType == SizeType.Absolute)
+                        style.Height *= factor;
+            }
+
+            foreach (Control child in control.Controls)
+                ScaleAbsoluteTableStyles(child, factor);
         }
     }
 }
