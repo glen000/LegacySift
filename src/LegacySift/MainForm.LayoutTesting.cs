@@ -18,6 +18,10 @@ namespace LegacySift
         internal void PrepareLayoutTest(LayoutTestState state, Size clientSize, float scaleFactor)
         {
             _layoutTestMode = true;
+            CreateControl();
+            Show();
+            Application.DoEvents();
+
             SuspendLayout();
             if (scaleFactor > 1.001F)
                 Scale(new SizeF(scaleFactor, scaleFactor));
@@ -48,8 +52,6 @@ namespace LegacySift
                 ToggleOtherOptions();
 
             ResumeLayout(true);
-            CreateControl();
-            Show();
             Application.DoEvents();
             PerformLayoutTree(this);
             PerformLayout();
