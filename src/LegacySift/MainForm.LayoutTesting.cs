@@ -18,17 +18,18 @@ namespace LegacySift
         internal void PrepareLayoutTest(LayoutTestState state, Size clientSize, float scaleFactor)
         {
             _layoutTestMode = true;
+            // Make the regression matrix deterministic on hosted runners.  The
+            // interactive application remains DPI-aware, but the harness owns
+            // scaling explicitly so a runner configured at 125% does not apply
+            // a second, implicit scale before the requested case is prepared.
+            AutoScaleMode = AutoScaleMode.None;
             CreateControl();
             Show();
             Application.DoEvents();
 
             SuspendLayout();
-            float deviceScale;
-            using (var graphics = CreateGraphics())
-                deviceScale = graphics.DpiX / 96F;
-            var relativeScale = scaleFactor / deviceScale;
-            if (System.Math.Abs(relativeScale - 1F) > 0.001F)
-                Scale(new SizeF(relativeScale, relativeScale));
+            if (System.Math.Abs(scaleFactor - 1F) > 0.001F)
+                Scale(new SizeF(scaleFactor, scaleFactor));
             ClientSize = clientSize;
 
             if ((int)state >= (int)LayoutTestState.FoldersSelected)
