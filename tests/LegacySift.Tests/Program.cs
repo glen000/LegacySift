@@ -340,7 +340,7 @@ namespace LegacySift.Tests
                     var control = Find(form, name);
                     Assert(control != null, prefix + name + " must exist");
                     Assert(control.Width > 2 && control.Height > 2, prefix + name + " must have visible area");
-                    Assert(IsInsideForm(form, control, 5), prefix + name + " must stay inside the client area");
+                    Assert(IsInsideForm(form, control, 5), prefix + name + " must stay inside the client area; bounds=" + BoundsInForm(control, form) + ", client=" + form.ClientSize);
                 }
 
                 Assert(!BoundsInForm(Find(form, "OldPanel"), form).IntersectsWith(BoundsInForm(Find(form, "CurrentPanel"), form)), prefix + "OLD and CURRENT panels must not overlap");

@@ -157,7 +157,7 @@ namespace LegacySift
                 Name = "FolderPair",
                 Dock = DockStyle.Fill,
                 AutoSize = false,
-                Height = 112,
+                Height = 108,
                 ColumnCount = 2,
                 RowCount = 1,
                 Margin = new Padding(0),
@@ -240,7 +240,7 @@ namespace LegacySift
                 AutoSize = true,
                 MinimumSize = new Size(310, 34),
                 Font = new Font(Font, FontStyle.Bold),
-                Padding = new Padding(10, 4, 10, 4)
+                Padding = new Padding(8, 2, 8, 2)
             };
             _analyzeButton.Click += async (s, e) => await AnalyzeAsync();
             _cancelButton = new Button { Name = "CancelButton", Text = L10n.T("Cancel"), AutoSize = true, MinimumSize = new Size(90, 34), Enabled = false };
@@ -284,7 +284,7 @@ namespace LegacySift
             {
                 Name = "ResultsTabs",
                 Dock = DockStyle.Fill,
-                MinimumSize = new Size(0, 110),
+                MinimumSize = new Size(0, 80),
                 Margin = new Padding(0),
                 Multiline = true
             };
@@ -330,7 +330,7 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 Text = L10n.T("CleanupBeforeAnalysis"),
                 Font = new Font(Font.FontFamily, 9F, FontStyle.Bold),
-                Padding = new Padding(2, 0, 2, 3)
+                Padding = new Padding(2, 0, 2, 1)
             };
             cleanupLayout.Controls.Add(_cleanupExplanationLabel, 0, 0);
 
@@ -437,7 +437,7 @@ namespace LegacySift
                 MinimumSize = new Size(340, 36),
                 Enabled = false,
                 Font = new Font(Font, FontStyle.Bold),
-                Padding = new Padding(10, 4, 10, 4)
+                Padding = new Padding(8, 2, 8, 2)
             };
             _cleanupButton.Click += async (s, e) => await CleanupAsync();
             _restoreButton = new Button
@@ -473,8 +473,8 @@ namespace LegacySift
                 AutoSize = false,
                 BackColor = background,
                 Padding = new Padding(10),
-                MinimumSize = new Size(0, 109),
-                Height = 109
+                MinimumSize = new Size(0, 105),
+                Height = 105
             };
             var layout = new TableLayoutPanel { Name = "FolderLayout", Dock = DockStyle.Fill, AutoSize = false, ColumnCount = 2, RowCount = 3 };
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
