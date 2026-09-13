@@ -81,6 +81,7 @@ namespace LegacySift
                 RowCount = 2,
                 Padding = new Padding(0)
             };
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             Controls.Add(root);
@@ -137,6 +138,7 @@ namespace LegacySift
                 RowCount = 6,
                 Padding = new Padding(8)
             };
+            outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -217,6 +219,7 @@ namespace LegacySift
                 RowCount = 3,
                 Margin = new Padding(0, 2, 0, 1)
             };
+            checkArea.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             checkArea.Controls.Add(new Label
             {
                 Name = "DirectionLabel",
@@ -257,6 +260,7 @@ namespace LegacySift
             checkArea.Controls.Add(actionBar, 0, 1);
 
             var progressArea = new TableLayoutPanel { Name = "ProgressArea", Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 1, RowCount = 2, Margin = new Padding(0) };
+            progressArea.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             _progress = new ProgressBar { Name = "ProgressBar", Dock = DockStyle.Fill, Height = 10, Style = ProgressBarStyle.Continuous, Margin = new Padding(0) };
             _statusLabel = new Label { Name = "StatusLabel", AutoSize = true, Text = L10n.T("Ready"), ForeColor = SystemColors.GrayText, Margin = new Padding(0) };
             progressArea.Controls.Add(_progress, 0, 0);
@@ -328,6 +332,7 @@ namespace LegacySift
                 RowCount = 6,
                 Margin = new Padding(0)
             };
+            cleanupLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
             _cleanupExplanationLabel = new Label
             {
