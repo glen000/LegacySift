@@ -23,8 +23,12 @@ namespace LegacySift
             Application.DoEvents();
 
             SuspendLayout();
-            if (scaleFactor > 1.001F)
-                Scale(new SizeF(scaleFactor, scaleFactor));
+            float deviceScale;
+            using (var graphics = CreateGraphics())
+                deviceScale = graphics.DpiX / 96F;
+            var relativeScale = scaleFactor / deviceScale;
+            if (System.Math.Abs(relativeScale - 1F) > 0.001F)
+                Scale(new SizeF(relativeScale, relativeScale));
             ClientSize = clientSize;
 
             if ((int)state >= (int)LayoutTestState.FoldersSelected)
