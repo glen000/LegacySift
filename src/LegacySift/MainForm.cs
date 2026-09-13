@@ -44,6 +44,7 @@ namespace LegacySift
         private string _lastReportPath;
         private string _lastQuarantineRoot;
         private bool _busy;
+        private bool _layoutTestMode;
 
         public MainForm()
         {
@@ -55,7 +56,10 @@ namespace LegacySift
             MinimumSize = new Size(860, 620);
             Size = new Size(1160, 740);
             BuildUi();
-            Shown += (s, e) => FitDefaultWindowToWorkingArea();
+            Shown += (s, e) =>
+            {
+                if (!_layoutTestMode) FitDefaultWindowToWorkingArea();
+            };
         }
 
         private void FitDefaultWindowToWorkingArea()

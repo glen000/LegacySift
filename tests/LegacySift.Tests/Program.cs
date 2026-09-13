@@ -368,6 +368,8 @@ namespace LegacySift.Tests
                 using (var dialog = new LanguageDialog(current.Language))
                 {
                     dialog.CreateControl();
+                    dialog.Show();
+                    Application.DoEvents();
                     dialog.PerformLayout();
                     var choices = dialog.Controls.Find("LanguageList", true)[0].Controls.OfType<RadioButton>().ToList();
                     Assert(choices.Count == 21, current.Code + " language dialog must contain 21 choices");
