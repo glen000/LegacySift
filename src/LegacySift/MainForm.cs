@@ -323,7 +323,7 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 ColumnCount = 1,
-                RowCount = 5,
+                RowCount = 6,
                 Margin = new Padding(0)
             };
 
@@ -376,6 +376,7 @@ namespace LegacySift
             {
                 Name = "OtherOptionsPanel",
                 AutoSize = true,
+                Dock = DockStyle.Fill,
                 Visible = false,
                 Margin = new Padding(0)
             };
@@ -383,6 +384,7 @@ namespace LegacySift
             {
                 Name = "OtherOptionsFlow",
                 AutoSize = true,
+                Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = true,
                 Margin = new Padding(0)
@@ -397,8 +399,8 @@ namespace LegacySift
             optionsFlow.Controls.Add(_recycleRadio);
             optionsFlow.Controls.Add(_removeEmptyCheck);
             _otherOptionsPanel.Controls.Add(optionsFlow);
-            modeRow.Controls.Add(_otherOptionsPanel);
             cleanupLayout.Controls.Add(modeRow, 0, 1);
+            cleanupLayout.Controls.Add(_otherOptionsPanel, 0, 2);
 
             _confirmCheck = new CheckBox
             {
@@ -410,7 +412,7 @@ namespace LegacySift
                 Enabled = false
             };
             _confirmCheck.CheckedChanged += (s, e) => UpdateCleanupEnabled();
-            cleanupLayout.Controls.Add(_confirmCheck, 0, 2);
+            cleanupLayout.Controls.Add(_confirmCheck, 0, 3);
 
             var protectedReminder = new Label
             {
@@ -422,7 +424,7 @@ namespace LegacySift
                 Font = new Font(Font, FontStyle.Bold),
                 Margin = new Padding(3, 2, 3, 4)
             };
-            cleanupLayout.Controls.Add(protectedReminder, 0, 3);
+            cleanupLayout.Controls.Add(protectedReminder, 0, 4);
 
             var cleanupButtons = new FlowLayoutPanel
             {
@@ -455,7 +457,7 @@ namespace LegacySift
             _restoreButton.Click += async (s, e) => await RestoreQuarantineAsync();
             cleanupButtons.Controls.Add(_cleanupButton);
             cleanupButtons.Controls.Add(_restoreButton);
-            cleanupLayout.Controls.Add(cleanupButtons, 0, 4);
+            cleanupLayout.Controls.Add(cleanupButtons, 0, 5);
 
             cleanupBox.Controls.Add(cleanupLayout);
             return cleanupBox;
