@@ -56,6 +56,17 @@ namespace LegacySift
             PerformLayoutTree(this);
             PerformLayout();
             Application.DoEvents();
+
+            var mainTabs = Controls.Find("MainTabs", true)[0] as TabControl;
+            if (mainTabs != null && mainTabs.TabPages.Count > 1)
+            {
+                mainTabs.SelectedIndex = 1;
+                Application.DoEvents();
+                PerformLayoutTree(mainTabs.TabPages[1]);
+                mainTabs.SelectedIndex = 0;
+                Application.DoEvents();
+                PerformLayoutTree(mainTabs.TabPages[0]);
+            }
         }
 
         internal Bitmap CaptureLayoutTestImage()
