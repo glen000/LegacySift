@@ -332,7 +332,8 @@ namespace LegacySift
             _cleanupExplanationLabel = new Label
             {
                 Name = "CleanupExplanation",
-                AutoSize = true,
+                AutoSize = false,
+                Height = 48,
                 Dock = DockStyle.Fill,
                 Text = L10n.T("CleanupBeforeAnalysis"),
                 Font = new Font(Font.FontFamily, 9F, FontStyle.Bold),
@@ -419,7 +420,8 @@ namespace LegacySift
             var protectedReminder = new Label
             {
                 Name = "ProtectedReminder",
-                AutoSize = true,
+                AutoSize = false,
+                Height = 44,
                 Dock = DockStyle.Fill,
                 Text = L10n.T("ProtectedReminder"),
                 ForeColor = Color.FromArgb(27, 94, 32),

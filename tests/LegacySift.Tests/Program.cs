@@ -332,7 +332,7 @@ namespace LegacySift.Tests
                 var required = new[]
                 {
                     "LanguageButton", "MainTabs", "WorkPage", "OldPanel", "CurrentPanel", "OldBrowseButton",
-                    "CurrentBrowseButton", "AnalyzeButton", "ResultsTabs", "CleanupGroup", "SafetyFolderRadio",
+                    "CurrentBrowseButton", "AnalyzeButton", "ResultsTabs", "CleanupGroup", "CleanupExplanation", "SafetyFolderRadio",
                     "ConfirmCheck", "CleanupButton", "RestoreButton", "ProtectedReminder", "SummaryLabel", "HelpText"
                 };
                 foreach (var name in required)
@@ -351,6 +351,8 @@ namespace LegacySift.Tests
                 Assert(ButtonTextFits((Button)Find(form, "AnalyzeButton"), 16), prefix + "check button text must fit");
                 Assert(ButtonTextFits((Button)Find(form, "CleanupButton"), 16), prefix + "cleanup button text must fit");
                 Assert(LabelTextFits((Label)Find(form, "SummaryLabel")), prefix + "summary text must fit");
+                Assert(LabelTextFits((Label)Find(form, "CleanupExplanation")), prefix + "cleanup explanation must fit");
+                Assert(LabelTextFits((Label)Find(form, "ProtectedReminder")), prefix + "protected reminder must fit");
                 Assert(Find(form, "HelpText").Text.Length > 300, prefix + "guide and safety text must be present");
 
                 if (state == LayoutTestState.OtherOptionsExpanded)
