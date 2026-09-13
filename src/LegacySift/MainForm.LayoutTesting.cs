@@ -1,4 +1,5 @@
 using LegacySift.Core;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -18,10 +19,10 @@ namespace LegacySift
         internal void PrepareLayoutTest(LayoutTestState state, Size clientSize, float scaleFactor)
         {
             _layoutTestMode = true;
-            // Make the regression matrix deterministic on hosted runners.  The
-            // interactive application remains DPI-aware, but the harness owns
-            // scaling explicitly so a runner configured at 125% does not apply
-            // a second, implicit scale before the requested case is prepared.
+            // Make the regression matrix deterministic on hosted runners. The
+            // interactive application remains DPI-aware; the harness supplies
+            // the physical client size and simulates DPI text pressure without
+            // depending on the runner's virtualized device DPI.
             AutoScaleMode = AutoScaleMode.None;
             CreateControl();
             Show();
@@ -29,7 +30,7 @@ namespace LegacySift
 
             SuspendLayout();
             if (System.Math.Abs(scaleFactor - 1F) > 0.001F)
-                Scale(new SizeF(scaleFactor, scaleFactor));
+                ScaleFonts(this, scaleFactor);
             ClientSize = clientSize;
 
             if ((int)state >= (int)LayoutTestState.FoldersSelected)
@@ -119,6 +120,30 @@ namespace LegacySift
             control.PerformLayout();
             foreach (Control child in control.Controls)
                 PerformLayoutTree(child);
+        }
+
+        private static void ScaleFonts(Control root, float factor)
+        {
+            var fonts = new List<KeyValuePair<Control, Font>>();
+            CollectFonts(root, fonts);
+            foreach (var pair in fonts)
+            {
+                var font = pair.Value;
+                pair.Key.Font = new Font(
+                    font.FontFamily,
+                    font.Size * factor,
+                    font.Style,
+                    font.Unit,
+                    font.GdiCharSet,
+                    font.GdiVerticalFont);
+            }
+        }
+
+        private static void CollectFonts(Control control, List<KeyValuePair<Control, Font>> fonts)
+        {
+            fonts.Add(new KeyValuePair<Control, Font>(control, control.Font));
+            foreach (Control child in control.Controls)
+                CollectFonts(child, fonts);
         }
     }
 }
