@@ -21,11 +21,17 @@ jobs:
 
       - name: Build Release
         shell: pwsh
-        run: msbuild LegacySift.sln /m /p:Configuration=Release /p:Platform="Any CPU"
+        run: msbuild LegacySift.sln /m /warnaserror /p:Configuration=Release /p:Platform="Any CPU"
+
+      - name: Verify removed localization is absent from shipped sources
+        shell: pwsh
+        run: |
+          $hits = Get-ChildItem src -Recurse -File | Select-String -Pattern 'AppLanguage\.Russian|FlagKind\.Russia|Русский|language=ru'
+          if ($hits) { $hits | ForEach-Object { Write-Error $_ }; throw 'Removed Russian localization is still present in shipped sources.' }
 
       - name: Run smoke tests
         shell: pwsh
-        run: .\tests\LegacySift.Tests\bin\Release\LegacySift.Tests.exe
+        run: .\tests\LegacySift.Tests\bin\Release\LegacySift.Tests.exe --capture-layout .\layout-screenshots
 
       - name: Package portable build
         shell: pwsh
@@ -44,3 +50,4 @@ jobs:
           path: |
             LegacySift-windows.zip
             LegacySift-windows.zip.sha256
+            layout-screenshots\*.png

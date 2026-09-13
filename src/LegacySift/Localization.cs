@@ -15,11 +15,18 @@ namespace LegacySift
         Polish,
         Dutch,
         Turkish,
-        Russian,
         Ukrainian,
         ChineseSimplified,
         Japanese,
-        Hindi
+        Hindi,
+        Romanian,
+        Czech,
+        Greek,
+        Hungarian,
+        Swedish,
+        Korean,
+        Indonesian,
+        Vietnamese
     }
 
     internal static partial class L10n
@@ -55,8 +62,14 @@ namespace LegacySift
 
         public static AppLanguage DetectDefaultLanguage()
         {
-            var name = (CultureInfo.CurrentUICulture.Name ?? string.Empty).ToLowerInvariant();
-            var two = (CultureInfo.CurrentUICulture.TwoLetterISOLanguageName ?? string.Empty).ToLowerInvariant();
+            return DetectLanguage(CultureInfo.CurrentUICulture);
+        }
+
+        internal static AppLanguage DetectLanguage(CultureInfo uiCulture)
+        {
+            if (uiCulture == null) return AppLanguage.English;
+            var name = (uiCulture.Name ?? string.Empty).ToLowerInvariant();
+            var two = (uiCulture.TwoLetterISOLanguageName ?? string.Empty).ToLowerInvariant();
 
             switch (two)
             {
@@ -68,11 +81,18 @@ namespace LegacySift
                 case "pl": return AppLanguage.Polish;
                 case "nl": return AppLanguage.Dutch;
                 case "tr": return AppLanguage.Turkish;
-                case "ru": return AppLanguage.Russian;
                 case "uk": return AppLanguage.Ukrainian;
                 case "zh": return AppLanguage.ChineseSimplified;
                 case "ja": return AppLanguage.Japanese;
                 case "hi": return AppLanguage.Hindi;
+                case "ro": return AppLanguage.Romanian;
+                case "cs": return AppLanguage.Czech;
+                case "el": return AppLanguage.Greek;
+                case "hu": return AppLanguage.Hungarian;
+                case "sv": return AppLanguage.Swedish;
+                case "ko": return AppLanguage.Korean;
+                case "id": return AppLanguage.Indonesian;
+                case "vi": return AppLanguage.Vietnamese;
                 default:
                     if (name.StartsWith("zh-", StringComparison.Ordinal)) return AppLanguage.ChineseSimplified;
                     return AppLanguage.English;
@@ -91,11 +111,18 @@ namespace LegacySift
                 case AppLanguage.Polish: return "pl";
                 case AppLanguage.Dutch: return "nl";
                 case AppLanguage.Turkish: return "tr";
-                case AppLanguage.Russian: return "ru";
                 case AppLanguage.Ukrainian: return "uk";
                 case AppLanguage.ChineseSimplified: return "zh-Hans";
                 case AppLanguage.Japanese: return "ja";
                 case AppLanguage.Hindi: return "hi";
+                case AppLanguage.Romanian: return "ro";
+                case AppLanguage.Czech: return "cs";
+                case AppLanguage.Greek: return "el";
+                case AppLanguage.Hungarian: return "hu";
+                case AppLanguage.Swedish: return "sv";
+                case AppLanguage.Korean: return "ko";
+                case AppLanguage.Indonesian: return "id";
+                case AppLanguage.Vietnamese: return "vi";
                 default: return "en";
             }
         }
@@ -113,13 +140,29 @@ namespace LegacySift
                 case "pl": return AppLanguage.Polish;
                 case "nl": return AppLanguage.Dutch;
                 case "tr": return AppLanguage.Turkish;
-                case "ru": return AppLanguage.Russian;
                 case "uk": return AppLanguage.Ukrainian;
                 case "zh":
                 case "zh-cn":
                 case "zh-hans": return AppLanguage.ChineseSimplified;
                 case "ja": return AppLanguage.Japanese;
                 case "hi": return AppLanguage.Hindi;
+                case "ro":
+                case "ro-ro": return AppLanguage.Romanian;
+                case "cs":
+                case "cs-cz": return AppLanguage.Czech;
+                case "el":
+                case "el-gr": return AppLanguage.Greek;
+                case "hu":
+                case "hu-hu": return AppLanguage.Hungarian;
+                case "sv":
+                case "sv-se": return AppLanguage.Swedish;
+                case "ko":
+                case "ko-kr": return AppLanguage.Korean;
+                case "id":
+                case "id-id":
+                case "in": return AppLanguage.Indonesian;
+                case "vi":
+                case "vi-vn": return AppLanguage.Vietnamese;
                 default: return AppLanguage.English;
             }
         }

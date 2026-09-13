@@ -1,11 +1,15 @@
 using LegacySift.Core;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace LegacySift.Tests
 {
@@ -13,8 +17,11 @@ namespace LegacySift.Tests
     {
         private static int _assertions;
 
-        private static int Main()
+        [STAThread]
+        private static int Main(string[] args)
         {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
             L10n.SetLanguage(AppLanguage.English);
             var root = Path.Combine(Path.GetTempPath(), "LegacySiftTests_" + Guid.NewGuid().ToString("N"));
             try
@@ -25,6 +32,13 @@ namespace LegacySift.Tests
                 TestPathSafety(root);
                 TestCriticalWording();
                 TestAllTranslations();
+                TestCultureMapping();
+                TestSavedLanguageSettings();
+                TestScriptCoverage();
+                TestLayoutMatrix();
+                TestLanguageDialogLayout();
+                if (args.Length == 2 && args[0] == "--capture-layout")
+                    CaptureRepresentativeLayouts(args[1]);
                 Console.WriteLine("PASS — " + _assertions + " assertions");
                 return 0;
             }
@@ -181,6 +195,258 @@ namespace LegacySift.Tests
             foreach (Match match in Regex.Matches(value ?? string.Empty, @"\{\d+\}"))
                 result.Add(match.Value);
             return result;
+        }
+
+        private static void TestCultureMapping()
+        {
+            var expected = new Dictionary<string, AppLanguage>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "en-US", AppLanguage.English }, { "it-IT", AppLanguage.Italian }, { "de-DE", AppLanguage.German },
+                { "fr-FR", AppLanguage.French }, { "es-ES", AppLanguage.Spanish }, { "pt-BR", AppLanguage.Portuguese },
+                { "pl-PL", AppLanguage.Polish }, { "nl-NL", AppLanguage.Dutch }, { "tr-TR", AppLanguage.Turkish },
+                { "uk-UA", AppLanguage.Ukrainian }, { "zh-CN", AppLanguage.ChineseSimplified }, { "zh-TW", AppLanguage.ChineseSimplified },
+                { "ja-JP", AppLanguage.Japanese }, { "hi-IN", AppLanguage.Hindi }, { "ro-RO", AppLanguage.Romanian },
+                { "cs-CZ", AppLanguage.Czech }, { "el-GR", AppLanguage.Greek }, { "hu-HU", AppLanguage.Hungarian },
+                { "sv-SE", AppLanguage.Swedish }, { "ko-KR", AppLanguage.Korean }, { "id-ID", AppLanguage.Indonesian },
+                { "vi-VN", AppLanguage.Vietnamese }, { "ru-RU", AppLanguage.English }, { "ar-SA", AppLanguage.English },
+                { "fi-FI", AppLanguage.English }
+            };
+            foreach (var pair in expected)
+                Assert(L10n.DetectLanguage(CultureInfo.GetCultureInfo(pair.Key)) == pair.Value, pair.Key + " Windows culture mapping");
+        }
+
+        private static void TestSavedLanguageSettings()
+        {
+            foreach (var info in LanguageCatalog.All)
+            {
+                var serialized = SettingsStore.SerializeLanguageSetting(info.Language);
+                Assert(SettingsStore.ParseLanguageSetting(new[] { serialized.Trim() }, AppLanguage.English) == info.Language, info.Code + " setting must round-trip");
+            }
+            Assert(SettingsStore.ParseLanguageSetting(new[] { "language=ru" }, AppLanguage.Italian) == AppLanguage.English, "removed Russian setting must fall back to English");
+            Assert(SettingsStore.ParseLanguageSetting(new[] { "language=unknown" }, AppLanguage.Italian) == AppLanguage.English, "unknown setting must fall back to English");
+            Assert(SettingsStore.ParseLanguageSetting(new[] { "broken=true" }, AppLanguage.Italian) == AppLanguage.Italian, "unrelated setting line must preserve caller fallback");
+            Assert(L10n.FromCode("in") == AppLanguage.Indonesian, "legacy Indonesian code must remain readable");
+        }
+
+        private static void TestScriptCoverage()
+        {
+            Assert(Enum.GetNames(typeof(AppLanguage)).All(x => !x.Equals("Russian", StringComparison.OrdinalIgnoreCase)), "Russian enum value must be absent");
+            Assert(LanguageCatalog.All.All(x => !x.Code.Equals("RU", StringComparison.OrdinalIgnoreCase)), "Russian catalog entry must be absent");
+            Assert(L10n.T("LanguageButton") == "Language / Lingua…", "language recovery entry must remain bilingual");
+
+            var scripts = new Dictionary<AppLanguage, string>
+            {
+                { AppLanguage.Turkish, "İ" }, { AppLanguage.Ukrainian, "Ї" }, { AppLanguage.ChineseSimplified, "旧" },
+                { AppLanguage.Japanese, "古" }, { AppLanguage.Hindi, "पुराना" }, { AppLanguage.Greek, "ΠΑΛΙ" },
+                { AppLanguage.Korean, "이전" }, { AppLanguage.Vietnamese, "HIỆN TẠI" }
+            };
+            foreach (var pair in scripts)
+            {
+                var dict = L10n.TranslationForTests(pair.Key);
+                Assert(dict.Values.Any(x => x.Contains(pair.Value)), pair.Key + " must contain its expected script or diacritics");
+                Assert(dict.Values.All(x => !x.Contains("\uFFFD")), pair.Key + " must not contain replacement glyphs");
+            }
+
+            foreach (var info in LanguageCatalog.All)
+            {
+                var terms = SafetyTerms(info.Language);
+                var dict = L10n.TranslationForTests(info.Language);
+                var critical = dict["Intro"] + " " + dict["CleanupExplanation"] + " " + dict["Confirm"] + " " + dict["ExactNote"];
+                Assert(ContainsIgnoreCase(critical, terms[0]), info.Code + " critical wording must identify OLD");
+                Assert(ContainsIgnoreCase(critical, terms[1]), info.Code + " critical wording must identify CURRENT");
+                Assert(ContainsIgnoreCase(critical, terms[2]), info.Code + " critical wording must identify identical copies");
+            }
+        }
+
+        private static string[] SafetyTerms(AppLanguage language)
+        {
+            switch (language)
+            {
+                case AppLanguage.Italian: return new[] { "VECCHIA", "ATTUALE", "identic" };
+                case AppLanguage.German: return new[] { "ALTEN", "AKTUELL", "identisch" };
+                case AppLanguage.French: return new[] { "ANCIEN", "ACTUEL", "identique" };
+                case AppLanguage.Spanish: return new[] { "ANTIGUA", "ACTUAL", "idéntic" };
+                case AppLanguage.Portuguese: return new[] { "ANTIGA", "ATUAL", "idêntic" };
+                case AppLanguage.Polish: return new[] { "STARY", "BIEŻĄC", "identycz" };
+                case AppLanguage.Dutch: return new[] { "OUDE", "HUIDIGE", "identiek" };
+                case AppLanguage.Turkish: return new[] { "ESKİ", "GÜNCEL", "aynı" };
+                case AppLanguage.Ukrainian: return new[] { "СТАР", "ПОТОЧН", "ідентич" };
+                case AppLanguage.ChineseSimplified: return new[] { "旧", "当前", "相同" };
+                case AppLanguage.Japanese: return new[] { "古い", "現在", "同一" };
+                case AppLanguage.Hindi: return new[] { "पुरान", "वर्तमान", "समान" };
+                case AppLanguage.Romanian: return new[] { "VECHI", "CURENT", "identic" };
+                case AppLanguage.Czech: return new[] { "STAR", "AKTUÁLN", "totož" };
+                case AppLanguage.Greek: return new[] { "ΠΑΛΙ", "ΤΡΕΧ", "πανομοιότυπ" };
+                case AppLanguage.Hungarian: return new[] { "RÉGI", "JELENLEGI", "azonos" };
+                case AppLanguage.Swedish: return new[] { "GAMMAL", "AKTUELL", "identisk" };
+                case AppLanguage.Korean: return new[] { "이전", "현재", "동일" };
+                case AppLanguage.Indonesian: return new[] { "LAMA", "SAAT INI", "identik" };
+                case AppLanguage.Vietnamese: return new[] { "CŨ", "HIỆN TẠI", "giống hệt" };
+                default: return new[] { "OLD", "CURRENT", "identical" };
+            }
+        }
+
+        private static bool ContainsIgnoreCase(string text, string value)
+        {
+            return text.IndexOf(value, StringComparison.CurrentCultureIgnoreCase) >= 0;
+        }
+
+        private static void TestLayoutMatrix()
+        {
+            var startupConfigurations = new[]
+            {
+                new LayoutConfiguration("1366x768@100", new Size(1144, 673), 1F),
+                new LayoutConfiguration("1600x900@100", new Size(1144, 701), 1F),
+                new LayoutConfiguration("1920x1080@100", new Size(1144, 701), 1F),
+                new LayoutConfiguration("2560x1440@100", new Size(1144, 701), 1F),
+                new LayoutConfiguration("1600x900@125-approx", new Size(1434, 825), 1.25F),
+                new LayoutConfiguration("1920x1080@150-approx", new Size(1724, 1001), 1.5F),
+                new LayoutConfiguration("2560x1440@150-approx", new Size(1724, 1051), 1.5F)
+            };
+            var allStates = (LayoutTestState[])Enum.GetValues(typeof(LayoutTestState));
+
+            foreach (var info in LanguageCatalog.All)
+            {
+                foreach (var configuration in startupConfigurations)
+                    AuditMainForm(info, configuration, LayoutTestState.Initial);
+
+                var constrained = startupConfigurations[0];
+                foreach (var state in allStates.Where(x => x != LayoutTestState.Initial))
+                    AuditMainForm(info, constrained, state);
+
+                AuditMainForm(info, startupConfigurations[4], LayoutTestState.AnalysisCompleted);
+                AuditMainForm(info, startupConfigurations[4], LayoutTestState.OtherOptionsExpanded);
+                AuditMainForm(info, startupConfigurations[5], LayoutTestState.AnalysisCompleted);
+                AuditMainForm(info, startupConfigurations[5], LayoutTestState.OtherOptionsExpanded);
+            }
+            L10n.SetLanguage(AppLanguage.English);
+        }
+
+        private static void AuditMainForm(LanguageInfo info, LayoutConfiguration configuration, LayoutTestState state)
+        {
+            L10n.SetLanguage(info.Language);
+            using (var form = new MainForm())
+            {
+                form.PrepareLayoutTest(state, configuration.ClientSize, configuration.ScaleFactor);
+                var prefix = info.Code + " " + configuration.Name + " " + state + ": ";
+                var required = new[]
+                {
+                    "LanguageButton", "MainTabs", "WorkPage", "OldPanel", "CurrentPanel", "OldBrowseButton",
+                    "CurrentBrowseButton", "AnalyzeButton", "ResultsTabs", "CleanupGroup", "SafetyFolderRadio",
+                    "ConfirmCheck", "CleanupButton", "RestoreButton", "ProtectedReminder", "HelpText"
+                };
+                foreach (var name in required)
+                {
+                    var control = Find(form, name);
+                    Assert(control != null, prefix + name + " must exist");
+                    Assert(control.Width > 2 && control.Height > 2, prefix + name + " must have visible area");
+                    Assert(IsInsideForm(form, control, 5), prefix + name + " must stay inside the client area");
+                }
+
+                Assert(!BoundsInForm(Find(form, "OldPanel"), form).IntersectsWith(BoundsInForm(Find(form, "CurrentPanel"), form)), prefix + "OLD and CURRENT panels must not overlap");
+                Assert(!BoundsInForm(Find(form, "OldBrowseButton"), form).IntersectsWith(BoundsInForm(Find(form, "CurrentBrowseButton"), form)), prefix + "Browse buttons must not overlap");
+                Assert(ButtonTextFits((Button)Find(form, "LanguageButton"), 12), prefix + "language button text must fit");
+                Assert(ButtonTextFits((Button)Find(form, "OldBrowseButton"), 12), prefix + "OLD Browse text must fit");
+                Assert(ButtonTextFits((Button)Find(form, "CurrentBrowseButton"), 12), prefix + "CURRENT Browse text must fit");
+                Assert(ButtonTextFits((Button)Find(form, "AnalyzeButton"), 16), prefix + "check button text must fit");
+                Assert(ButtonTextFits((Button)Find(form, "CleanupButton"), 16), prefix + "cleanup button text must fit");
+                Assert(Find(form, "HelpText").Text.Length > 300, prefix + "guide and safety text must be present");
+
+                if (state == LayoutTestState.OtherOptionsExpanded)
+                {
+                    var options = Find(form, "OtherOptionsPanel");
+                    Assert(options != null && options.Width > 2 && options.Height > 2, prefix + "expanded options must have visible area");
+                    Assert(IsInsideForm(form, options, 5), prefix + "expanded options must stay inside the client area");
+                }
+            }
+        }
+
+        private static void TestLanguageDialogLayout()
+        {
+            foreach (var current in LanguageCatalog.All)
+            {
+                using (var dialog = new LanguageDialog(current.Language))
+                {
+                    dialog.CreateControl();
+                    dialog.PerformLayout();
+                    var choices = dialog.Controls.Find("LanguageList", true)[0].Controls.OfType<RadioButton>().ToList();
+                    Assert(choices.Count == 21, current.Code + " language dialog must contain 21 choices");
+                    foreach (var choice in choices)
+                    {
+                        Assert(choice.Width > 250 && choice.Height >= 30, current.Code + " language choice must have usable bounds: " + choice.Name);
+                        var measured = TextRenderer.MeasureText(choice.Text, choice.Font).Width + 55;
+                        Assert(measured <= choice.ClientSize.Width + 8, current.Code + " language choice text must fit: " + choice.Name);
+                    }
+                    Assert(choices.Any(x => x.Name == "LanguageChoice_IT"), current.Code + " dialog must always expose Italian");
+                    Assert(choices.Any(x => x.Name == "LanguageChoice_EN"), current.Code + " dialog must always expose English");
+                }
+            }
+        }
+
+        private static void CaptureRepresentativeLayouts(string outputDirectory)
+        {
+            Directory.CreateDirectory(outputDirectory);
+            var languages = new[]
+            {
+                AppLanguage.Italian, AppLanguage.German, AppLanguage.Ukrainian,
+                AppLanguage.ChineseSimplified, AppLanguage.Hindi, AppLanguage.Korean
+            };
+            foreach (var language in languages)
+            {
+                L10n.SetLanguage(language);
+                using (var form = new MainForm())
+                {
+                    form.PrepareLayoutTest(LayoutTestState.AnalysisCompleted, new Size(1144, 673), 1F);
+                    using (var image = form.CaptureLayoutTestImage())
+                        image.Save(Path.Combine(outputDirectory, L10n.ToCode(language).Replace("-", "_") + "-1366x768-100.png"), ImageFormat.Png);
+                }
+            }
+            L10n.SetLanguage(AppLanguage.English);
+        }
+
+        private static Control Find(Control root, string name)
+        {
+            return root.Controls.Find(name, true).FirstOrDefault();
+        }
+
+        private static bool IsInsideForm(Form form, Control control, int tolerance)
+        {
+            if (control == null) return false;
+            var bounds = BoundsInForm(control, form);
+            return bounds.Left >= -tolerance && bounds.Top >= -tolerance &&
+                   bounds.Right <= form.ClientSize.Width + tolerance && bounds.Bottom <= form.ClientSize.Height + tolerance;
+        }
+
+        private static Rectangle BoundsInForm(Control control, Form form)
+        {
+            var point = Point.Empty;
+            var current = control;
+            while (current != null && current != form)
+            {
+                point.Offset(current.Left, current.Top);
+                current = current.Parent;
+            }
+            return new Rectangle(point, control.Size);
+        }
+
+        private static bool ButtonTextFits(Button button, int horizontalPadding)
+        {
+            var measured = TextRenderer.MeasureText(button.Text ?? string.Empty, button.Font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine).Width;
+            return measured <= button.ClientSize.Width - horizontalPadding + 8;
+        }
+
+        private sealed class LayoutConfiguration
+        {
+            public string Name { get; private set; }
+            public Size ClientSize { get; private set; }
+            public float ScaleFactor { get; private set; }
+
+            public LayoutConfiguration(string name, Size clientSize, float scaleFactor)
+            {
+                Name = name;
+                ClientSize = clientSize;
+                ScaleFactor = scaleFactor;
+            }
         }
 
         private static void Write(string path, string content)

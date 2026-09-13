@@ -45,11 +45,18 @@ namespace LegacySift
         Poland,
         Netherlands,
         Turkey,
-        Russia,
         Ukraine,
         China,
         Japan,
-        India
+        India,
+        Romania,
+        CzechRepublic,
+        Greece,
+        Hungary,
+        Sweden,
+        SouthKorea,
+        Indonesia,
+        Vietnam
     }
 
     internal static class LanguageCatalog
@@ -65,11 +72,18 @@ namespace LegacySift
             new LanguageInfo(AppLanguage.Polish, "PL", "Polski", "Polish", FlagKind.Poland),
             new LanguageInfo(AppLanguage.Dutch, "NL", "Nederlands", "Dutch", FlagKind.Netherlands),
             new LanguageInfo(AppLanguage.Turkish, "TR", "Türkçe", "Turkish", FlagKind.Turkey),
-            new LanguageInfo(AppLanguage.Russian, "RU", "Русский", "Russian", FlagKind.Russia),
             new LanguageInfo(AppLanguage.Ukrainian, "UK", "Українська", "Ukrainian", FlagKind.Ukraine),
             new LanguageInfo(AppLanguage.ChineseSimplified, "ZH", "简体中文", "Chinese (Simplified)", FlagKind.China),
             new LanguageInfo(AppLanguage.Japanese, "JA", "日本語", "Japanese", FlagKind.Japan),
-            new LanguageInfo(AppLanguage.Hindi, "HI", "हिन्दी", "Hindi", FlagKind.India)
+            new LanguageInfo(AppLanguage.Hindi, "HI", "हिन्दी", "Hindi", FlagKind.India),
+            new LanguageInfo(AppLanguage.Romanian, "RO", "Română", "Romanian", FlagKind.Romania),
+            new LanguageInfo(AppLanguage.Czech, "CS", "Čeština", "Czech", FlagKind.CzechRepublic),
+            new LanguageInfo(AppLanguage.Greek, "EL", "Ελληνικά", "Greek", FlagKind.Greece),
+            new LanguageInfo(AppLanguage.Hungarian, "HU", "Magyar", "Hungarian", FlagKind.Hungary),
+            new LanguageInfo(AppLanguage.Swedish, "SV", "Svenska", "Swedish", FlagKind.Sweden),
+            new LanguageInfo(AppLanguage.Korean, "KO", "한국어", "Korean", FlagKind.SouthKorea),
+            new LanguageInfo(AppLanguage.Indonesian, "ID", "Bahasa Indonesia", "Indonesian", FlagKind.Indonesia),
+            new LanguageInfo(AppLanguage.Vietnamese, "VI", "Tiếng Việt", "Vietnamese", FlagKind.Vietnam)
         };
 
         public static IList<LanguageInfo> All
@@ -135,9 +149,6 @@ namespace LegacySift
                             g.FillEllipse(white, 17, 7, 3, 3);
                         }
                         break;
-                    case FlagKind.Russia:
-                        FillHorizontal(g, rect, Color.White, Color.FromArgb(0, 57, 166), Color.FromArgb(213, 43, 30));
-                        break;
                     case FlagKind.Ukraine:
                         FillTwoBands(g, rect, Color.FromArgb(0, 87, 183), Color.FromArgb(255, 215, 0));
                         break;
@@ -159,6 +170,60 @@ namespace LegacySift
                         FillHorizontal(g, rect, Color.FromArgb(255, 153, 51), Color.White, Color.FromArgb(19, 136, 8));
                         using (var blue = new SolidBrush(Color.FromArgb(0, 0, 128)))
                             g.FillEllipse(blue, width / 2 - 2, height / 2 - 2, 4, 4);
+                        break;
+                    case FlagKind.Romania:
+                        FillVertical(g, rect, Color.FromArgb(0, 43, 127), Color.FromArgb(252, 209, 22), Color.FromArgb(206, 17, 38));
+                        break;
+                    case FlagKind.CzechRepublic:
+                        FillTwoBands(g, rect, Color.White, Color.FromArgb(215, 20, 26));
+                        using (var blue = new SolidBrush(Color.FromArgb(17, 69, 126)))
+                            g.FillPolygon(blue, new[] { new Point(rect.Left, rect.Top), new Point(rect.Left + width / 2, rect.Top + height / 2), new Point(rect.Left, rect.Bottom) });
+                        break;
+                    case FlagKind.Greece:
+                        g.Clear(Color.FromArgb(13, 94, 175));
+                        using (var white = new Pen(Color.White, 2F))
+                        {
+                            for (var y = 2; y < height; y += 4) g.DrawLine(white, 0, y, width, y);
+                            g.FillRectangle(Brushes.White, 5, 0, 2, 10);
+                            g.FillRectangle(Brushes.White, 0, 4, 12, 2);
+                        }
+                        break;
+                    case FlagKind.Hungary:
+                        FillHorizontal(g, rect, Color.FromArgb(205, 42, 62), Color.White, Color.FromArgb(67, 111, 77));
+                        break;
+                    case FlagKind.Sweden:
+                        g.Clear(Color.FromArgb(0, 106, 167));
+                        using (var yellow = new SolidBrush(Color.FromArgb(254, 204, 0)))
+                        {
+                            g.FillRectangle(yellow, 8, 0, 3, height);
+                            g.FillRectangle(yellow, 0, 7, width, 3);
+                        }
+                        break;
+                    case FlagKind.SouthKorea:
+                        g.Clear(Color.White);
+                        using (var red = new SolidBrush(Color.FromArgb(205, 46, 58)))
+                        using (var blue = new SolidBrush(Color.FromArgb(0, 71, 160)))
+                        {
+                            g.FillPie(red, width / 2 - 5, height / 2 - 5, 10, 10, 180, 180);
+                            g.FillPie(blue, width / 2 - 5, height / 2 - 5, 10, 10, 0, 180);
+                        }
+                        break;
+                    case FlagKind.Indonesia:
+                        FillTwoBands(g, rect, Color.FromArgb(206, 17, 38), Color.White);
+                        break;
+                    case FlagKind.Vietnam:
+                        g.Clear(Color.FromArgb(218, 37, 29));
+                        using (var yellow = new SolidBrush(Color.FromArgb(255, 255, 0)))
+                        {
+                            var points = new PointF[10];
+                            for (var i = 0; i < 10; i++)
+                            {
+                                var angle = -Math.PI / 2 + i * Math.PI / 5;
+                                var radius = i % 2 == 0 ? 5F : 2.2F;
+                                points[i] = new PointF(width / 2F + (float)Math.Cos(angle) * radius, height / 2F + (float)Math.Sin(angle) * radius);
+                            }
+                            g.FillPolygon(yellow, points);
+                        }
                         break;
                     case FlagKind.UnitedKingdom:
                         DrawUnitedKingdom(g, rect);

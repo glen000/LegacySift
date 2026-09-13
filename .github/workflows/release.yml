@@ -20,7 +20,7 @@ jobs:
 
       - name: Build Release
         shell: pwsh
-        run: msbuild LegacySift.sln /m /p:Configuration=Release /p:Platform="Any CPU"
+        run: msbuild LegacySift.sln /m /warnaserror /p:Configuration=Release /p:Platform="Any CPU"
 
       - name: Run smoke tests
         shell: pwsh

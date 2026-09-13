@@ -35,10 +35,12 @@ namespace LegacySift
             ShowInTaskbar = false;
             ClientSize = new Size(530, 575);
             Font = new Font("Segoe UI", 9F);
+            AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
 
             var root = new TableLayoutPanel
             {
+                Name = "LanguageRoot",
                 Dock = DockStyle.Fill,
                 Padding = new Padding(16),
                 ColumnCount = 1,
@@ -52,6 +54,7 @@ namespace LegacySift
 
             root.Controls.Add(new Label
             {
+                Name = "LanguageHeading",
                 AutoSize = true,
                 Font = new Font(Font.FontFamily, 12F, FontStyle.Bold),
                 Text = "Choose language / Scegli la lingua"
@@ -59,6 +62,7 @@ namespace LegacySift
 
             root.Controls.Add(new Label
             {
+                Name = "LanguageRecoveryHelp",
                 AutoSize = true,
                 ForeColor = SystemColors.GrayText,
                 Margin = new Padding(0, 5, 0, 10),
@@ -68,6 +72,7 @@ namespace LegacySift
 
             var scroll = new Panel
             {
+                Name = "LanguageScroll",
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
                 BorderStyle = BorderStyle.FixedSingle,
@@ -77,6 +82,7 @@ namespace LegacySift
 
             var list = new TableLayoutPanel
             {
+                Name = "LanguageList",
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 ColumnCount = 1,
@@ -93,6 +99,7 @@ namespace LegacySift
 
                 var choice = new RadioButton
                 {
+                    Name = "LanguageChoice_" + info.Code,
                     AutoSize = false,
                     Height = 34,
                     Dock = DockStyle.Top,
@@ -117,13 +124,14 @@ namespace LegacySift
 
             var buttons = new FlowLayoutPanel
             {
+                Name = "LanguageButtons",
                 Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.RightToLeft,
                 AutoSize = true,
                 Margin = new Padding(0, 12, 0, 0)
             };
-            var ok = new Button { Text = "OK", DialogResult = DialogResult.OK, AutoSize = true, MinimumSize = new Size(90, 32) };
-            var cancel = new Button { Text = "Cancel / Annulla", DialogResult = DialogResult.Cancel, AutoSize = true, MinimumSize = new Size(130, 32) };
+            var ok = new Button { Name = "LanguageOk", Text = "OK", DialogResult = DialogResult.OK, AutoSize = true, MinimumSize = new Size(90, 32) };
+            var cancel = new Button { Name = "LanguageCancel", Text = "Cancel / Annulla", DialogResult = DialogResult.Cancel, AutoSize = true, MinimumSize = new Size(130, 32) };
             buttons.Controls.Add(ok);
             buttons.Controls.Add(cancel);
             root.Controls.Add(buttons, 0, 3);
