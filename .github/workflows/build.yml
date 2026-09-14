@@ -41,7 +41,15 @@ jobs:
           Copy-Item README.md dist\README.md
           Copy-Item LICENSE dist\LICENSE.txt
           Compress-Archive -Path dist\LegacySift.exe,dist\README.md,dist\LICENSE.txt -DestinationPath LegacySift-windows.zip -Force
-          (Get-FileHash LegacySift-windows.zip -Algorithm SHA256).Hash.ToLower() + "  LegacySift-windows.zip" | Set-Content LegacySift-windows.zip.sha256 -Encoding ascii
+          $zipHash = (Get-FileHash LegacySift-windows.zip -Algorithm SHA256).Hash.ToLower()
+          "$zipHash  LegacySift-windows.zip" | Set-Content LegacySift-windows.zip.sha256 -Encoding ascii
+          Write-Host "Portable ZIP SHA256: $zipHash"
+          Add-Type -AssemblyName System.Drawing
+          Get-ChildItem layout-screenshots\*.png | Sort-Object Name | ForEach-Object {
+            $image = [System.Drawing.Image]::FromFile($_.FullName)
+            try { Write-Host "Layout screenshot: $($_.Name) $($image.Width)x$($image.Height) ($($_.Length) bytes)" }
+            finally { $image.Dispose() }
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
