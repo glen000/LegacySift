@@ -80,8 +80,9 @@ namespace LegacySift
 
         internal Bitmap CaptureLayoutTestImage()
         {
-            var image = new Bitmap(Width, Height);
-            DrawToBitmap(image, new Rectangle(Point.Empty, Size));
+            var root = Controls["RootLayout"];
+            var image = new Bitmap(root.ClientSize.Width, root.ClientSize.Height);
+            root.DrawToBitmap(image, new Rectangle(Point.Empty, root.ClientSize));
             return image;
         }
 
