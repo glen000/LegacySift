@@ -393,6 +393,8 @@ namespace LegacySift.Tests
                     Assert(grid.Rows.Count >= 4, prefix + "test data must expose at least four actual result rows");
                     Assert(grid.ClientSize.Height >= usefulMinimum, prefix + "result grid must show its header and at least three data rows; height=" + grid.ClientSize.Height + ", minimum=" + usefulMinimum);
                     Assert(grid.DisplayedRowCount(false) >= 3, prefix + "at least three result rows must be visibly displayed");
+                    if (info.Language == AppLanguage.English)
+                        Console.WriteLine("LAYOUT_METRIC constrained-grid-height=" + grid.ClientSize.Height + " displayed-rows=" + grid.DisplayedRowCount(false) + " cleanup-height=" + Find(form, "CleanupGroup").Height);
                 }
 
                 if (state == LayoutTestState.OtherOptionsExpanded)
