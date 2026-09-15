@@ -376,7 +376,9 @@ namespace LegacySift.Tests
 
                 Assert(!BoundsInForm(Find(form, "OldPanel"), form).IntersectsWith(BoundsInForm(Find(form, "CurrentPanel"), form)), prefix + "OLD and CURRENT panels must not overlap");
                 Assert(!BoundsInForm(Find(form, "OldBrowseButton"), form).IntersectsWith(BoundsInForm(Find(form, "CurrentBrowseButton"), form)), prefix + "Browse buttons must not overlap");
-                Assert(!BoundsInForm(Find(form, "ResultsTabs"), form).IntersectsWith(BoundsInForm(Find(form, "CleanupGroup"), form)), prefix + "results and cleanup must not overlap");
+                var resultBounds = BoundsInForm(Find(form, "ResultsTabs"), form);
+                var cleanupBounds = BoundsInForm(Find(form, "CleanupGroup"), form);
+                Assert(!resultBounds.IntersectsWith(cleanupBounds), prefix + "results and cleanup must not overlap; results=" + resultBounds + ", cleanup=" + cleanupBounds);
                 Assert(ButtonTextFits((Button)Find(form, "LanguageButton"), 12), prefix + "language button text must fit");
                 Assert(ButtonTextFits((Button)Find(form, "OldBrowseButton"), 12), prefix + "OLD Browse text must fit");
                 Assert(ButtonTextFits((Button)Find(form, "CurrentBrowseButton"), 12), prefix + "CURRENT Browse text must fit");

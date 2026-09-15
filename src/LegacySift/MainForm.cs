@@ -273,7 +273,7 @@ namespace LegacySift
                 Name = "SummaryPanel",
                 Dock = DockStyle.Fill,
                 AutoSize = false,
-                Height = 50,
+                Height = 48,
                 BackColor = Color.FromArgb(245, 247, 250),
                 Padding = new Padding(7, 4, 7, 4),
                 Margin = new Padding(0, 1, 0, 3)
@@ -294,7 +294,7 @@ namespace LegacySift
             {
                 Name = "ResultsTabs",
                 Dock = DockStyle.Fill,
-                MinimumSize = new Size(0, 145),
+                MinimumSize = new Size(0, 80),
                 Margin = new Padding(0),
                 Multiline = true
             };
@@ -570,7 +570,7 @@ namespace LegacySift
         private void AddResultTab(string title, string explanation, DataGridView grid)
         {
             var page = new TabPage(title);
-            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Padding = new Padding(4) };
+            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Padding = new Padding(0) };
             layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             layout.Controls.Add(new Label
@@ -578,7 +578,7 @@ namespace LegacySift
                 AutoSize = true,
                 Dock = DockStyle.Fill,
                 Text = explanation,
-                Padding = new Padding(4, 2, 4, 5),
+                Padding = new Padding(2, 1, 2, 2),
                 ForeColor = SystemColors.GrayText
             }, 0, 0);
             layout.Controls.Add(grid, 0, 1);
