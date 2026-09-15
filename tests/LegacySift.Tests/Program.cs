@@ -393,6 +393,11 @@ namespace LegacySift.Tests
                 {
                     var grid = (DataGridView)Find(form, "UniqueGrid");
                     var usefulMinimum = grid.ColumnHeadersHeight + grid.RowTemplate.Height * 3;
+                    if (info.Language == AppLanguage.English)
+                    {
+                        var allocationNames = new[] { "IntroLabel", "FolderPair", "CheckArea", "SummaryPanel", "ResultsTabs", "CleanupGroup" };
+                        Console.WriteLine("LAYOUT_ALLOCATION " + string.Join(" ", allocationNames.Select(name => name + "=" + BoundsInForm(Find(form, name), form))));
+                    }
                     Assert(grid.Rows.Count >= 4, prefix + "test data must expose at least four actual result rows");
                     Assert(grid.ClientSize.Height >= usefulMinimum, prefix + "result grid must show its header and at least three data rows; height=" + grid.ClientSize.Height + ", minimum=" + usefulMinimum);
                     Assert(grid.DisplayedRowCount(false) >= 3, prefix + "at least three result rows must be visibly displayed");
