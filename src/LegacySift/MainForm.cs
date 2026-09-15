@@ -11,7 +11,7 @@ using System.Windows.Forms;
 
 namespace LegacySift
 {
-    internal sealed class MainForm : Form
+    internal sealed partial class MainForm : Form
     {
         private TextBox _sourceBox;
         private TextBox _referenceBox;
@@ -44,37 +44,55 @@ namespace LegacySift
         private string _lastReportPath;
         private string _lastQuarantineRoot;
         private bool _busy;
+        private bool _layoutTestMode;
 
         public MainForm()
         {
             Text = L10n.T("AppTitle");
             StartPosition = FormStartPosition.CenterScreen;
-            MinimumSize = new Size(920, 680);
-            Size = new Size(1160, 780);
-            AutoScaleMode = AutoScaleMode.Dpi;
             Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            MinimumSize = new Size(860, 620);
+            Size = new Size(1160, 740);
             BuildUi();
+            Shown += (s, e) =>
+            {
+                if (!_layoutTestMode) FitDefaultWindowToWorkingArea();
+            };
+        }
+
+        private void FitDefaultWindowToWorkingArea()
+        {
+            var area = Screen.FromControl(this).WorkingArea;
+            var maxWidth = Math.Max(760, area.Width - 16);
+            var maxHeight = Math.Max(560, area.Height - 16);
+            MinimumSize = new Size(Math.Min(860, maxWidth), Math.Min(620, maxHeight));
+            Size = new Size(Math.Min(Width, maxWidth), Math.Min(Height, maxHeight));
         }
 
         private void BuildUi()
         {
             var root = new TableLayoutPanel
             {
+                Name = "RootLayout",
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 2,
                 Padding = new Padding(0)
             };
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             Controls.Add(root);
 
             var header = new TableLayoutPanel
             {
+                Name = "HeaderLayout",
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 ColumnCount = 2,
-                Padding = new Padding(14, 8, 14, 7),
+                Padding = new Padding(12, 5, 12, 4),
                 BackColor = SystemColors.ControlLightLight
             };
             header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
@@ -82,12 +100,14 @@ namespace LegacySift
 
             var title = new Label
             {
+                Name = "AppHeading",
                 AutoSize = true,
-                Font = new Font("Segoe UI", 16F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 Text = "LegacySift"
             };
             _languageButton = new Button
             {
+                Name = "LanguageButton",
                 Text = L10n.T("LanguageButton"),
                 AutoSize = true,
                 Margin = new Padding(10, 3, 0, 0)
@@ -97,9 +117,9 @@ namespace LegacySift
             header.Controls.Add(_languageButton, 1, 0);
             root.Controls.Add(header, 0, 0);
 
-            var mainTabs = new TabControl { Dock = DockStyle.Fill };
-            var workPage = new TabPage(L10n.T("TabWork"));
-            var helpPage = new TabPage(L10n.T("TabHelp"));
+            var mainTabs = new TabControl { Name = "MainTabs", Dock = DockStyle.Fill };
+            var workPage = new TabPage(L10n.T("TabWork")) { Name = "WorkPage" };
+            var helpPage = new TabPage(L10n.T("TabHelp")) { Name = "HelpPage" };
             mainTabs.TabPages.Add(workPage);
             mainTabs.TabPages.Add(helpPage);
             root.Controls.Add(mainTabs, 0, 1);
@@ -112,11 +132,13 @@ namespace LegacySift
         {
             var outer = new TableLayoutPanel
             {
+                Name = "WorkLayout",
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 6,
-                Padding = new Padding(12)
+                Padding = new Padding(8, 6, 8, 6)
             };
+            outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -127,6 +149,7 @@ namespace LegacySift
 
             var intro = new Label
             {
+                Name = "IntroLabel",
                 AutoSize = true,
                 Dock = DockStyle.Fill,
                 Font = new Font(Font.FontFamily, 9.5F, FontStyle.Bold),
@@ -137,9 +160,10 @@ namespace LegacySift
 
             var folderPair = new TableLayoutPanel
             {
+                Name = "FolderPair",
                 Dock = DockStyle.Fill,
                 AutoSize = false,
-                Height = 108,
+                Height = 105,
                 ColumnCount = 2,
                 RowCount = 1,
                 Margin = new Padding(0),
@@ -159,6 +183,10 @@ namespace LegacySift
                 out _sourceBrowseButton,
                 BrowseSource);
             oldPanel.Margin = new Padding(0, 0, 6, 0);
+            oldPanel.Name = "OldPanel";
+            _sourceBox.Name = "OldPath";
+            _sourceBrowseButton.Name = "OldBrowseButton";
+            oldPanel.Controls.Find("FolderDescription", true)[0].Name = "OldDescription";
 
             var currentPanel = CreateFolderPanel(
                 L10n.T("CurrentTitle"),
@@ -170,6 +198,10 @@ namespace LegacySift
                 out _referenceBrowseButton,
                 BrowseReference);
             currentPanel.Margin = new Padding(6, 0, 0, 0);
+            currentPanel.Name = "CurrentPanel";
+            _referenceBox.Name = "CurrentPath";
+            _referenceBrowseButton.Name = "CurrentBrowseButton";
+            currentPanel.Controls.Find("FolderDescription", true)[0].Name = "CurrentDescription";
 
             folderPair.Controls.Add(oldPanel, 0, 0);
             folderPair.Controls.Add(currentPanel, 1, 0);
@@ -180,51 +212,57 @@ namespace LegacySift
 
             var checkArea = new TableLayoutPanel
             {
+                Name = "CheckArea",
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 ColumnCount = 1,
                 RowCount = 3,
-                Margin = new Padding(0, 4, 0, 2)
+                Margin = new Padding(0)
             };
+            checkArea.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             checkArea.Controls.Add(new Label
             {
+                Name = "DirectionLabel",
                 AutoSize = true,
                 Dock = DockStyle.Fill,
                 Text = L10n.T("Direction"),
                 Font = new Font(Font, FontStyle.Bold),
-                Padding = new Padding(2, 2, 2, 2)
+                Padding = new Padding(2, 0, 2, 0)
             }, 0, 0);
 
             var actionBar = new FlowLayoutPanel
             {
+                Name = "ActionBar",
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
-                Padding = new Padding(0, 2, 0, 2),
+                Padding = new Padding(0),
                 Margin = new Padding(0)
             };
             _analyzeButton = new Button
             {
+                Name = "AnalyzeButton",
                 Text = L10n.T("Analyze"),
                 AutoSize = true,
-                MinimumSize = new Size(310, 40),
+                MinimumSize = new Size(310, 34),
                 Font = new Font(Font, FontStyle.Bold),
-                Padding = new Padding(10, 4, 10, 4)
+                Padding = new Padding(8, 2, 8, 2)
             };
             _analyzeButton.Click += async (s, e) => await AnalyzeAsync();
-            _cancelButton = new Button { Text = L10n.T("Cancel"), AutoSize = true, MinimumSize = new Size(90, 40), Enabled = false };
+            _cancelButton = new Button { Name = "CancelButton", Text = L10n.T("Cancel"), AutoSize = true, MinimumSize = new Size(90, 34), Enabled = false };
             _cancelButton.Click += (s, e) => _cts?.Cancel();
-            _reportButton = new Button { Text = L10n.T("OpenReport"), AutoSize = true, MinimumSize = new Size(130, 40), Enabled = false };
+            _reportButton = new Button { Name = "ReportButton", Text = L10n.T("OpenReport"), AutoSize = true, MinimumSize = new Size(130, 34), Enabled = false };
             _reportButton.Click += (s, e) => OpenReport();
             actionBar.Controls.Add(_analyzeButton);
             actionBar.Controls.Add(_cancelButton);
             actionBar.Controls.Add(_reportButton);
             checkArea.Controls.Add(actionBar, 0, 1);
 
-            var progressArea = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 1, RowCount = 2, Margin = new Padding(0) };
-            _progress = new ProgressBar { Dock = DockStyle.Fill, Height = 12, Style = ProgressBarStyle.Continuous, Margin = new Padding(0, 1, 0, 1) };
-            _statusLabel = new Label { AutoSize = true, Text = L10n.T("Ready"), ForeColor = SystemColors.GrayText, Margin = new Padding(0) };
+            var progressArea = new TableLayoutPanel { Name = "ProgressArea", Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 1, RowCount = 2, Margin = new Padding(0) };
+            progressArea.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            _progress = new ProgressBar { Name = "ProgressBar", Dock = DockStyle.Fill, Height = 8, Style = ProgressBarStyle.Continuous, Margin = new Padding(0) };
+            _statusLabel = new Label { Name = "StatusLabel", AutoSize = true, Text = L10n.T("Ready"), ForeColor = SystemColors.GrayText, Margin = new Padding(0) };
             progressArea.Controls.Add(_progress, 0, 0);
             progressArea.Controls.Add(_statusLabel, 0, 1);
             checkArea.Controls.Add(progressArea, 0, 2);
@@ -232,27 +270,42 @@ namespace LegacySift
 
             var summaryPanel = new Panel
             {
+                Name = "SummaryPanel",
                 Dock = DockStyle.Fill,
-                AutoSize = true,
+                AutoSize = false,
+                Height = 42,
                 BackColor = Color.FromArgb(245, 247, 250),
-                Padding = new Padding(9, 6, 9, 6),
-                Margin = new Padding(0, 2, 0, 5)
+                Padding = new Padding(7, 4, 7, 4),
+                Margin = new Padding(0, 1, 0, 3)
             };
             _summaryLabel = new Label
             {
-                AutoSize = true,
+                Name = "SummaryLabel",
+                AutoSize = false,
                 Dock = DockStyle.Fill,
                 Text = L10n.T("NoAnalysis"),
-                Font = new Font(Font.FontFamily, 9F, FontStyle.Bold)
+                Font = new Font(Font.FontFamily, 9F, FontStyle.Bold),
+                TextAlign = ContentAlignment.TopLeft
             };
             summaryPanel.Controls.Add(_summaryLabel);
             outer.Controls.Add(summaryPanel, 0, 3);
 
-            _resultsTabs = new TabControl { Dock = DockStyle.Fill, MinimumSize = new Size(0, 125), Margin = new Padding(0) };
+            _resultsTabs = new TabControl
+            {
+                Name = "ResultsTabs",
+                Dock = DockStyle.Fill,
+                MinimumSize = new Size(0, 80),
+                Margin = new Padding(0),
+                Multiline = true
+            };
             _uniqueGrid = CreateGrid();
             _versionGrid = CreateGrid();
             _duplicateGrid = CreateGrid();
             _errorGrid = CreateGrid();
+            _uniqueGrid.Name = "UniqueGrid";
+            _versionGrid.Name = "VersionGrid";
+            _duplicateGrid.Name = "DuplicateGrid";
+            _errorGrid.Name = "ErrorGrid";
             AddResultTab(L10n.T("TabRecover"), L10n.T("TabRecoverHelp"), _uniqueGrid);
             AddResultTab(L10n.T("TabVersions"), L10n.T("TabVersionsHelp"), _versionGrid);
             AddResultTab(L10n.T("TabDuplicates"), L10n.T("TabDuplicatesHelp"), _duplicateGrid);
@@ -266,34 +319,47 @@ namespace LegacySift
         {
             var cleanupBox = new GroupBox
             {
+                Name = "CleanupGroup",
                 Text = L10n.T("CleanupGroup"),
                 Dock = DockStyle.Fill,
                 AutoSize = true,
-                Padding = new Padding(9, 7, 9, 7),
-                Margin = new Padding(0, 6, 0, 0)
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Padding = new Padding(7, 3, 7, 3),
+                Margin = new Padding(0, 2, 0, 0)
             };
 
             var cleanupLayout = new TableLayoutPanel
             {
+                Name = "CleanupLayout",
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 ColumnCount = 1,
                 RowCount = 5,
                 Margin = new Padding(0)
             };
+            cleanupLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             _cleanupExplanationLabel = new Label
             {
-                AutoSize = true,
+                Name = "CleanupExplanation",
+                AutoSize = false,
+                Height = 36,
                 Dock = DockStyle.Fill,
                 Text = L10n.T("CleanupBeforeAnalysis"),
                 Font = new Font(Font.FontFamily, 9F, FontStyle.Bold),
-                Padding = new Padding(2, 0, 2, 3)
+                Padding = new Padding(2, 0, 2, 0),
+                Margin = new Padding(0)
             };
             cleanupLayout.Controls.Add(_cleanupExplanationLabel, 0, 0);
 
             var modeRow = new FlowLayoutPanel
             {
+                Name = "CleanupModeRow",
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 FlowDirection = FlowDirection.LeftToRight,
@@ -302,6 +368,7 @@ namespace LegacySift
             };
             _quarantineRadio = new RadioButton
             {
+                Name = "SafetyFolderRadio",
                 Text = L10n.T("Quarantine"),
                 AutoSize = true,
                 Checked = true,
@@ -316,6 +383,7 @@ namespace LegacySift
 
             _otherOptionsLink = new LinkLabel
             {
+                Name = "OtherOptionsLink",
                 Text = L10n.T("OtherOptions"),
                 AutoSize = true,
                 Margin = new Padding(3, 5, 6, 3)
@@ -325,80 +393,88 @@ namespace LegacySift
 
             _otherOptionsPanel = new Panel
             {
+                Name = "OtherOptionsPanel",
                 AutoSize = true,
+                Dock = DockStyle.Fill,
                 Visible = false,
                 Margin = new Padding(0)
             };
             var optionsFlow = new FlowLayoutPanel
             {
+                Name = "OtherOptionsFlow",
                 AutoSize = true,
+                Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = true,
                 Margin = new Padding(0)
             };
-            _recycleRadio = new RadioButton { Text = L10n.T("Recycle"), AutoSize = true, Margin = new Padding(6, 3, 12, 3) };
+            _recycleRadio = new RadioButton { Name = "RecycleRadio", Text = L10n.T("Recycle"), AutoSize = true, Margin = new Padding(6, 3, 12, 3) };
             _recycleRadio.CheckedChanged += (s, e) =>
             {
                 if (_recycleRadio.Checked) _quarantineRadio.Checked = false;
                 else if (!_quarantineRadio.Checked) _quarantineRadio.Checked = true;
             };
-            _removeEmptyCheck = new CheckBox { Text = L10n.T("RemoveEmpty"), AutoSize = true, Checked = true, Margin = new Padding(6, 3, 3, 3) };
+            _removeEmptyCheck = new CheckBox { Name = "RemoveEmptyCheck", Text = L10n.T("RemoveEmpty"), AutoSize = true, Checked = true, Margin = new Padding(6, 3, 3, 3) };
             optionsFlow.Controls.Add(_recycleRadio);
             optionsFlow.Controls.Add(_removeEmptyCheck);
             _otherOptionsPanel.Controls.Add(optionsFlow);
-            modeRow.Controls.Add(_otherOptionsPanel);
             cleanupLayout.Controls.Add(modeRow, 0, 1);
+            cleanupLayout.Controls.Add(_otherOptionsPanel, 0, 2);
 
             _confirmCheck = new CheckBox
             {
+                Name = "ConfirmCheck",
                 AutoSize = true,
                 Text = L10n.T("Confirm"),
                 Font = new Font(Font, FontStyle.Bold),
-                Margin = new Padding(3, 1, 3, 3),
+                Margin = new Padding(3, 0, 3, 1),
                 Enabled = false
             };
             _confirmCheck.CheckedChanged += (s, e) => UpdateCleanupEnabled();
-            cleanupLayout.Controls.Add(_confirmCheck, 0, 2);
+            cleanupLayout.Controls.Add(_confirmCheck, 0, 3);
 
             var protectedReminder = new Label
             {
+                Name = "ProtectedReminder",
                 AutoSize = true,
-                Dock = DockStyle.Fill,
                 Text = L10n.T("ProtectedReminder"),
                 ForeColor = Color.FromArgb(27, 94, 32),
                 Font = new Font(Font, FontStyle.Bold),
-                Margin = new Padding(3, 2, 3, 4)
+                Margin = new Padding(12, 8, 3, 0)
             };
-            cleanupLayout.Controls.Add(protectedReminder, 0, 3);
 
             var cleanupButtons = new FlowLayoutPanel
             {
+                Name = "CleanupButtons",
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = true,
+                WrapContents = false,
                 Margin = new Padding(0)
             };
             _cleanupButton = new Button
             {
+                Name = "CleanupButton",
                 Text = L10n.T("Cleanup"),
                 AutoSize = true,
-                MinimumSize = new Size(340, 42),
+                MinimumSize = new Size(340, 34),
                 Enabled = false,
                 Font = new Font(Font, FontStyle.Bold),
-                Padding = new Padding(10, 4, 10, 4)
+                Padding = new Padding(8, 2, 8, 2)
             };
             _cleanupButton.Click += async (s, e) => await CleanupAsync();
             _restoreButton = new Button
             {
+                Name = "RestoreButton",
                 Text = L10n.T("Restore"),
                 AutoSize = true,
-                MinimumSize = new Size(170, 42),
+                MinimumSize = new Size(170, 34),
                 Margin = new Padding(8, 0, 0, 0)
             };
             _restoreButton.Click += async (s, e) => await RestoreQuarantineAsync();
             cleanupButtons.Controls.Add(_cleanupButton);
             cleanupButtons.Controls.Add(_restoreButton);
+            cleanupButtons.Controls.Add(protectedReminder);
             cleanupLayout.Controls.Add(cleanupButtons, 0, 4);
 
             cleanupBox.Controls.Add(cleanupLayout);
@@ -424,7 +500,7 @@ namespace LegacySift
                 MinimumSize = new Size(0, 105),
                 Height = 105
             };
-            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = false, ColumnCount = 2, RowCount = 3 };
+            var layout = new TableLayoutPanel { Name = "FolderLayout", Dock = DockStyle.Fill, AutoSize = false, ColumnCount = 2, RowCount = 3 };
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 94F));
             layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -432,7 +508,7 @@ namespace LegacySift
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
             panel.Controls.Add(layout);
 
-            var header = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = true, Margin = new Padding(0) };
+            var header = new FlowLayoutPanel { Name = "FolderHeader", Dock = DockStyle.Fill, AutoSize = true, WrapContents = true, Margin = new Padding(0) };
             header.Controls.Add(new Label { AutoSize = true, Font = new Font(Font.FontFamily, 10.5F, FontStyle.Bold), Text = title, Margin = new Padding(0, 2, 9, 2) });
             header.Controls.Add(new Label
             {
@@ -449,6 +525,7 @@ namespace LegacySift
 
             var desc = new Label
             {
+                Name = "FolderDescription",
                 AutoSize = false,
                 Dock = DockStyle.Fill,
                 Text = description,
@@ -459,8 +536,8 @@ namespace LegacySift
             layout.Controls.Add(desc, 0, 1);
             layout.SetColumnSpan(desc, 2);
 
-            box = new TextBox { Dock = DockStyle.Fill, Margin = new Padding(0, 5, 7, 0) };
-            browseButton = new Button { Text = L10n.T("Browse"), AutoSize = false, Dock = DockStyle.Fill, Margin = new Padding(4, 3, 0, 0), MinimumSize = new Size(86, 28) };
+            box = new TextBox { Name = "FolderPath", Dock = DockStyle.Fill, Margin = new Padding(0, 5, 7, 0) };
+            browseButton = new Button { Name = "BrowseButton", Text = L10n.T("Browse"), AutoSize = false, Dock = DockStyle.Fill, Margin = new Padding(4, 3, 0, 0), MinimumSize = new Size(86, 28) };
             browseButton.Click += browseHandler;
             layout.Controls.Add(box, 0, 2);
             layout.Controls.Add(browseButton, 1, 2);
@@ -493,7 +570,7 @@ namespace LegacySift
         private void AddResultTab(string title, string explanation, DataGridView grid)
         {
             var page = new TabPage(title);
-            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Padding = new Padding(4) };
+            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Padding = new Padding(0) };
             layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             layout.Controls.Add(new Label
@@ -501,7 +578,7 @@ namespace LegacySift
                 AutoSize = true,
                 Dock = DockStyle.Fill,
                 Text = explanation,
-                Padding = new Padding(4, 2, 4, 5),
+                Padding = new Padding(2, 1, 2, 2),
                 ForeColor = SystemColors.GrayText
             }, 0, 0);
             layout.Controls.Add(grid, 0, 1);
@@ -513,12 +590,14 @@ namespace LegacySift
         {
             var box = new RichTextBox
             {
+                Name = "HelpText",
                 Dock = DockStyle.Fill,
                 ReadOnly = true,
                 BorderStyle = BorderStyle.None,
                 BackColor = SystemColors.Window,
                 Font = new Font("Segoe UI", 10F),
-                Text = L10n.T("HelpText")
+                Text = L10n.T("HelpText"),
+                ScrollBars = RichTextBoxScrollBars.Vertical
             };
             helpPage.Controls.Add(box);
         }

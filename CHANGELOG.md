@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.2-alpha
+
+Final multilingual UI and repeatable layout QA pass.
+
+- Expanded the interface to 34 complete translation dictionaries and closed the 0.2.2-alpha language scope.
+- Added Romanian, Czech, Greek, Hungarian, Swedish, Korean, Indonesian and Vietnamese.
+- Added Danish, Norwegian Bokmål, Finnish, Slovak, Bulgarian, Croatian, Bengali, Thai, Malay, Filipino, Estonian, Latvian and Lithuanian, including all three Baltic languages.
+- Removed Russian from the application, catalog, culture detection, saved settings, flags and compiled resources; old `ru` settings now fall back to English.
+- Kept the language chooser independent of the selected language with native name, English name, visible code and lightweight runtime-drawn flags.
+- Compacted the normal window and added working-area fitting so the main workflow remains discoverable on constrained Windows desktops.
+- Returned unused collapsed-cleanup height to the results grid so the default constrained window shows actual result rows without requiring maximization.
+- Added multi-state WinForms layout regression checks across every supported language, representative screen sizes and 100%/125%/150% scaling approximations.
+- Added programmatic screenshot capture for representative Latin, Cyrillic, CJK, Devanagari and Korean interfaces.
+- Arabic/RTL remains deferred until the directional OLD-to-CURRENT safety design can be implemented deliberately.
+- Comparison and cleanup safety logic is unchanged.
+
 ## 0.2.1-alpha
 
 Focused UX correction pass after the first real-world visual test.
