@@ -136,7 +136,7 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 6,
-                Padding = new Padding(8)
+                Padding = new Padding(8, 6, 8, 6)
             };
             outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -163,7 +163,7 @@ namespace LegacySift
                 Name = "FolderPair",
                 Dock = DockStyle.Fill,
                 AutoSize = false,
-                Height = 108,
+                Height = 105,
                 ColumnCount = 2,
                 RowCount = 1,
                 Margin = new Padding(0),
@@ -217,7 +217,7 @@ namespace LegacySift
                 AutoSize = true,
                 ColumnCount = 1,
                 RowCount = 3,
-                Margin = new Padding(0, 2, 0, 1)
+                Margin = new Padding(0)
             };
             checkArea.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             checkArea.Controls.Add(new Label
@@ -227,7 +227,7 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 Text = L10n.T("Direction"),
                 Font = new Font(Font, FontStyle.Bold),
-                Padding = new Padding(2, 2, 2, 2)
+                Padding = new Padding(2, 0, 2, 0)
             }, 0, 0);
 
             var actionBar = new FlowLayoutPanel
@@ -237,7 +237,7 @@ namespace LegacySift
                 AutoSize = true,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
-                Padding = new Padding(0, 1, 0, 1),
+                Padding = new Padding(0),
                 Margin = new Padding(0)
             };
             _analyzeButton = new Button
@@ -261,7 +261,7 @@ namespace LegacySift
 
             var progressArea = new TableLayoutPanel { Name = "ProgressArea", Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 1, RowCount = 2, Margin = new Padding(0) };
             progressArea.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            _progress = new ProgressBar { Name = "ProgressBar", Dock = DockStyle.Fill, Height = 10, Style = ProgressBarStyle.Continuous, Margin = new Padding(0) };
+            _progress = new ProgressBar { Name = "ProgressBar", Dock = DockStyle.Fill, Height = 8, Style = ProgressBarStyle.Continuous, Margin = new Padding(0) };
             _statusLabel = new Label { Name = "StatusLabel", AutoSize = true, Text = L10n.T("Ready"), ForeColor = SystemColors.GrayText, Margin = new Padding(0) };
             progressArea.Controls.Add(_progress, 0, 0);
             progressArea.Controls.Add(_statusLabel, 0, 1);
@@ -273,7 +273,7 @@ namespace LegacySift
                 Name = "SummaryPanel",
                 Dock = DockStyle.Fill,
                 AutoSize = false,
-                Height = 48,
+                Height = 42,
                 BackColor = Color.FromArgb(245, 247, 250),
                 Padding = new Padding(7, 4, 7, 4),
                 Margin = new Padding(0, 1, 0, 3)
