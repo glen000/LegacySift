@@ -11,6 +11,7 @@ namespace LegacySift
         FoldersSelected,
         AnalysisCompleted,
         CleanupReady,
+        CleanupConfirmed,
         OtherOptionsExpanded
     }
 
@@ -53,6 +54,11 @@ namespace LegacySift
             if ((int)state >= (int)LayoutTestState.CleanupReady)
             {
                 _confirmCheck.Enabled = true;
+                UpdateCleanupEnabled();
+            }
+
+            if ((int)state >= (int)LayoutTestState.CleanupConfirmed)
+            {
                 _confirmCheck.Checked = true;
                 UpdateCleanupEnabled();
             }
@@ -92,10 +98,13 @@ namespace LegacySift
             {
                 SourceRoot = @"C:\Recovered backup\Documents and family archive",
                 ReferenceRoot = @"D:\Current protected files\Documents",
-                SourceFileCount = 4,
+                SourceFileCount = 7,
                 ReferenceFileCount = 3
             };
             result.Items.Add(LayoutItem(ComparisonKind.Unique, "Family photos\\holiday-archive-very-long-name.jpg", null, 48234496, L10n.T("UniqueNote")));
+            result.Items.Add(LayoutItem(ComparisonKind.Unique, "Family photos\\school-trip.png", null, 7340032, L10n.T("UniqueNote")));
+            result.Items.Add(LayoutItem(ComparisonKind.Unique, "Documents\\old-tax-return.pdf", null, 524288, L10n.T("UniqueNote")));
+            result.Items.Add(LayoutItem(ComparisonKind.Unique, "Desktop\\notes-from-old-computer.txt", null, 4096, L10n.T("UniqueNote")));
             result.Items.Add(LayoutItem(ComparisonKind.PossibleVersion, "Contracts\\contract.docx", @"D:\Current protected files\Documents\Contracts\contract.docx", 93841, L10n.T("VersionNoteOne")));
             result.Items.Add(LayoutItem(ComparisonKind.ExactDuplicate, "Music\\recording.wav", @"D:\Current protected files\Documents\Audio\recording-copy.wav", 157286400, L10n.T("ExactNote")));
             result.Items.Add(LayoutItem(ComparisonKind.Error, "Unreadable\\locked-file.bin", null, 1024, L10n.T("ReparseFile")));

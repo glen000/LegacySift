@@ -26,13 +26,13 @@ During comparison, nothing is modified. Exact duplicates can later be moved out 
 
 ## Languages
 
-The current alpha includes 21 interface languages:
+The current alpha includes 34 interface languages:
 
-English, Italian, German, French, Spanish, Portuguese, Polish, Dutch, Turkish, Ukrainian, Simplified Chinese, Japanese, Hindi, Romanian, Czech, Greek, Hungarian, Swedish, Korean, Indonesian and Vietnamese.
+English, Italian, Bengali, Bulgarian, Simplified Chinese, Croatian, Czech, Danish, Dutch, Estonian, Filipino, Finnish, French, German, Greek, Hindi, Hungarian, Indonesian, Japanese, Korean, Latvian, Lithuanian, Malay, Norwegian Bokmål, Polish, Portuguese, Romanian, Slovak, Spanish, Swedish, Thai, Turkish, Ukrainian and Vietnamese.
 
 LegacySift follows the Windows UI language when it is supported and otherwise uses English. The language chooser deliberately stays easy to recover: it always shows a lightweight flag, the language's own name, its English name and a visible language code. The entry point remains **Language / Lingua** even when the rest of the interface uses another language.
 
-Arabic is deferred because right-to-left layout needs to be designed and tested rather than treated as a text-only translation.
+Arabic, Hebrew, Persian and Urdu are deferred because right-to-left layout needs to be designed and tested rather than treated as a text-only translation.
 
 Russian is not included. A Windows Russian UI or an old saved `ru` preference safely falls back to English.
 

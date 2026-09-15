@@ -166,7 +166,11 @@ namespace LegacySift.Tests
         {
             var english = L10n.TranslationForTests(AppLanguage.English);
             Assert(LanguageCatalog.All.Count == Enum.GetValues(typeof(AppLanguage)).Length, "language catalog must contain every AppLanguage value");
-            Assert(english.Count >= 100, "English baseline should contain the complete UI dictionary");
+            Assert(LanguageCatalog.All.Count == 34, "the final 0.2.2-alpha catalog must contain exactly 34 languages");
+            Assert(english.Count == 116, "English baseline must contain the frozen 116-key UI contract");
+            Assert(LanguageCatalog.All.Select(x => x.Flag).Distinct().Count() == 34, "every supported language must have one cataloged flag");
+            Assert(LanguageCatalog.All[0].Language == AppLanguage.English && LanguageCatalog.All[1].Language == AppLanguage.Italian, "English and Italian must remain first for language recovery");
+            Assert(LanguageCatalog.All.Skip(2).Select(x => x.EnglishName).SequenceEqual(LanguageCatalog.All.Skip(2).Select(x => x.EnglishName).OrderBy(x => x, StringComparer.Ordinal)), "remaining languages must have a stable English-name alphabetical order");
 
             foreach (var info in LanguageCatalog.All)
             {
@@ -208,8 +212,12 @@ namespace LegacySift.Tests
                 { "ja-JP", AppLanguage.Japanese }, { "hi-IN", AppLanguage.Hindi }, { "ro-RO", AppLanguage.Romanian },
                 { "cs-CZ", AppLanguage.Czech }, { "el-GR", AppLanguage.Greek }, { "hu-HU", AppLanguage.Hungarian },
                 { "sv-SE", AppLanguage.Swedish }, { "ko-KR", AppLanguage.Korean }, { "id-ID", AppLanguage.Indonesian },
-                { "vi-VN", AppLanguage.Vietnamese }, { "ru-RU", AppLanguage.English }, { "ar-SA", AppLanguage.English },
-                { "fi-FI", AppLanguage.English }
+                { "vi-VN", AppLanguage.Vietnamese }, { "da-DK", AppLanguage.Danish }, { "nb-NO", AppLanguage.NorwegianBokmal },
+                { "no-NO", AppLanguage.NorwegianBokmal }, { "nn-NO", AppLanguage.NorwegianBokmal }, { "fi-FI", AppLanguage.Finnish },
+                { "sk-SK", AppLanguage.Slovak }, { "bg-BG", AppLanguage.Bulgarian }, { "hr-HR", AppLanguage.Croatian },
+                { "bn-BD", AppLanguage.Bengali }, { "th-TH", AppLanguage.Thai }, { "ms-MY", AppLanguage.Malay },
+                { "fil-PH", AppLanguage.Filipino }, { "et-EE", AppLanguage.Estonian }, { "lv-LV", AppLanguage.Latvian },
+                { "lt-LT", AppLanguage.Lithuanian }, { "ru-RU", AppLanguage.English }, { "ar-SA", AppLanguage.English }
             };
             foreach (var pair in expected)
                 Assert(L10n.DetectLanguage(CultureInfo.GetCultureInfo(pair.Key)) == pair.Value, pair.Key + " Windows culture mapping");
@@ -226,6 +234,8 @@ namespace LegacySift.Tests
             Assert(SettingsStore.ParseLanguageSetting(new[] { "language=unknown" }, AppLanguage.Italian) == AppLanguage.English, "unknown setting must fall back to English");
             Assert(SettingsStore.ParseLanguageSetting(new[] { "broken=true" }, AppLanguage.Italian) == AppLanguage.Italian, "unrelated setting line must preserve caller fallback");
             Assert(L10n.FromCode("in") == AppLanguage.Indonesian, "legacy Indonesian code must remain readable");
+            Assert(L10n.FromCode("no") == AppLanguage.NorwegianBokmal, "generic Norwegian code must use Bokmål");
+            Assert(L10n.FromCode("nn-NO") == AppLanguage.NorwegianBokmal, "Nynorsk setting must safely use the single Norwegian Bokmål UI");
         }
 
         private static void TestScriptCoverage()
@@ -238,13 +248,21 @@ namespace LegacySift.Tests
             {
                 { AppLanguage.Turkish, "İ" }, { AppLanguage.Ukrainian, "Ї" }, { AppLanguage.ChineseSimplified, "旧" },
                 { AppLanguage.Japanese, "古" }, { AppLanguage.Hindi, "पुराना" }, { AppLanguage.Greek, "ΠΑΛΙ" },
-                { AppLanguage.Korean, "이전" }, { AppLanguage.Vietnamese, "HIỆN TẠI" }
+                { AppLanguage.Korean, "이전" }, { AppLanguage.Vietnamese, "HIỆN TẠI" },
+                { AppLanguage.Danish, "æ" }, { AppLanguage.NorwegianBokmal, "å" }, { AppLanguage.Finnish, "Ä" },
+                { AppLanguage.Slovak, "ľ" }, { AppLanguage.Bulgarian, "СТАР" }, { AppLanguage.Croatian, "Č" },
+                { AppLanguage.Bengali, "পুরনো" }, { AppLanguage.Thai, "เก่า" }, { AppLanguage.Malay, "SEMASA" },
+                { AppLanguage.Filipino, "KASALUKUYANG" }, { AppLanguage.Estonian, "Ä" },
+                { AppLanguage.Latvian, "Ā" }, { AppLanguage.Lithuanian, "ų" }
             };
             foreach (var pair in scripts)
             {
                 var dict = L10n.TranslationForTests(pair.Key);
                 Assert(dict.Values.Any(x => x.Contains(pair.Value)), pair.Key + " must contain its expected script or diacritics");
                 Assert(dict.Values.All(x => !x.Contains("\uFFFD")), pair.Key + " must not contain replacement glyphs");
+                Assert(dict.Values.All(x => !x.Contains("\u25A1")), pair.Key + " must not contain a literal missing-glyph square");
+                using (var font = new Font("Segoe UI", 9F))
+                    Assert(TextRenderer.MeasureText(pair.Value, font).Width > 4, pair.Key + " script sample must be measurable by WinForms");
             }
 
             foreach (var info in LanguageCatalog.All)
@@ -282,6 +300,19 @@ namespace LegacySift.Tests
                 case AppLanguage.Korean: return new[] { "이전", "현재", "동일" };
                 case AppLanguage.Indonesian: return new[] { "LAMA", "SAAT INI", "identik" };
                 case AppLanguage.Vietnamese: return new[] { "CŨ", "HIỆN TẠI", "giống hệt" };
+                case AppLanguage.Danish: return new[] { "GAMLE", "NUVÆRENDE", "identisk" };
+                case AppLanguage.NorwegianBokmal: return new[] { "GAMLE", "GJELDENDE", "identisk" };
+                case AppLanguage.Finnish: return new[] { "VANH", "NYKYI", "identt" };
+                case AppLanguage.Slovak: return new[] { "STAR", "AKTUÁLN", "identick" };
+                case AppLanguage.Bulgarian: return new[] { "СТАР", "ТЕКУЩ", "идентич" };
+                case AppLanguage.Croatian: return new[] { "STAR", "TRENUTAČ", "identič" };
+                case AppLanguage.Bengali: return new[] { "পুরনো", "বর্তমান", "হুবহু" };
+                case AppLanguage.Thai: return new[] { "เก่า", "ปัจจุบัน", "เหมือนกัน" };
+                case AppLanguage.Malay: return new[] { "LAMA", "SEMASA", "sama" };
+                case AppLanguage.Filipino: return new[] { "LUMANG", "KASALUKUYANG", "magkapareho" };
+                case AppLanguage.Estonian: return new[] { "VANA", "PRAEGU", "ident" };
+                case AppLanguage.Latvian: return new[] { "VEC", "PAŠREIZ", "identisk" };
+                case AppLanguage.Lithuanian: return new[] { "SEN", "DABART", "identišk" };
                 default: return new[] { "OLD", "CURRENT", "identical" };
             }
         }
@@ -355,6 +386,15 @@ namespace LegacySift.Tests
                 Assert(LabelTextFits((Label)Find(form, "ProtectedReminder")), prefix + "protected reminder must fit");
                 Assert(Find(form, "HelpText").Text.Length > 300, prefix + "guide and safety text must be present");
 
+                if (state == LayoutTestState.AnalysisCompleted && configuration.Name == "1366x768@100")
+                {
+                    var grid = (DataGridView)Find(form, "UniqueGrid");
+                    var usefulMinimum = grid.ColumnHeadersHeight + grid.RowTemplate.Height * 3;
+                    Assert(grid.Rows.Count >= 4, prefix + "test data must expose at least four actual result rows");
+                    Assert(grid.ClientSize.Height >= usefulMinimum, prefix + "result grid must show its header and at least three data rows; height=" + grid.ClientSize.Height + ", minimum=" + usefulMinimum);
+                    Assert(grid.DisplayedRowCount(false) >= 3, prefix + "at least three result rows must be visibly displayed");
+                }
+
                 if (state == LayoutTestState.OtherOptionsExpanded)
                 {
                     var options = Find(form, "OtherOptionsPanel");
@@ -375,7 +415,7 @@ namespace LegacySift.Tests
                     Application.DoEvents();
                     dialog.PerformLayout();
                     var choices = dialog.Controls.Find("LanguageList", true)[0].Controls.OfType<RadioButton>().ToList();
-                    Assert(choices.Count == 21, current.Code + " language dialog must contain 21 choices");
+                    Assert(choices.Count == 34, current.Code + " language dialog must contain 34 choices");
                     foreach (var choice in choices)
                     {
                         Assert(choice.Width > 250 && choice.Height >= 30, current.Code + " language choice must have usable bounds: " + choice.Name);
@@ -384,6 +424,12 @@ namespace LegacySift.Tests
                     }
                     Assert(choices.Any(x => x.Name == "LanguageChoice_IT"), current.Code + " dialog must always expose Italian");
                     Assert(choices.Any(x => x.Name == "LanguageChoice_EN"), current.Code + " dialog must always expose English");
+                    Assert(choices[0].Name == "LanguageChoice_EN" && choices[1].Name == "LanguageChoice_IT", current.Code + " dialog must keep recovery languages first");
+                    var scroll = (ScrollableControl)dialog.Controls.Find("LanguageScroll", true)[0];
+                    var last = choices.Last();
+                    scroll.ScrollControlIntoView(last);
+                    Application.DoEvents();
+                    Assert(last.Bottom + scroll.AutoScrollPosition.Y <= scroll.ClientSize.Height + 8, current.Code + " final language entry must be reachable by scrolling");
                 }
             }
         }
@@ -394,7 +440,8 @@ namespace LegacySift.Tests
             var languages = new[]
             {
                 AppLanguage.Italian, AppLanguage.German, AppLanguage.Ukrainian,
-                AppLanguage.ChineseSimplified, AppLanguage.Hindi, AppLanguage.Korean
+                AppLanguage.ChineseSimplified, AppLanguage.Hindi, AppLanguage.Korean,
+                AppLanguage.Bengali, AppLanguage.Thai, AppLanguage.Lithuanian
             };
             foreach (var language in languages)
             {

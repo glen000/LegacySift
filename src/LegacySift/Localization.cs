@@ -26,7 +26,20 @@ namespace LegacySift
         Swedish,
         Korean,
         Indonesian,
-        Vietnamese
+        Vietnamese,
+        Danish,
+        NorwegianBokmal,
+        Finnish,
+        Slovak,
+        Bulgarian,
+        Croatian,
+        Bengali,
+        Thai,
+        Malay,
+        Filipino,
+        Estonian,
+        Latvian,
+        Lithuanian
     }
 
     internal static partial class L10n
@@ -93,6 +106,21 @@ namespace LegacySift
                 case "ko": return AppLanguage.Korean;
                 case "id": return AppLanguage.Indonesian;
                 case "vi": return AppLanguage.Vietnamese;
+                case "da": return AppLanguage.Danish;
+                case "nb":
+                case "no":
+                case "nn": return AppLanguage.NorwegianBokmal;
+                case "fi": return AppLanguage.Finnish;
+                case "sk": return AppLanguage.Slovak;
+                case "bg": return AppLanguage.Bulgarian;
+                case "hr": return AppLanguage.Croatian;
+                case "bn": return AppLanguage.Bengali;
+                case "th": return AppLanguage.Thai;
+                case "ms": return AppLanguage.Malay;
+                case "fil": return AppLanguage.Filipino;
+                case "et": return AppLanguage.Estonian;
+                case "lv": return AppLanguage.Latvian;
+                case "lt": return AppLanguage.Lithuanian;
                 default:
                     if (name.StartsWith("zh-", StringComparison.Ordinal)) return AppLanguage.ChineseSimplified;
                     return AppLanguage.English;
@@ -123,6 +151,19 @@ namespace LegacySift
                 case AppLanguage.Korean: return "ko";
                 case AppLanguage.Indonesian: return "id";
                 case AppLanguage.Vietnamese: return "vi";
+                case AppLanguage.Danish: return "da";
+                case AppLanguage.NorwegianBokmal: return "nb";
+                case AppLanguage.Finnish: return "fi";
+                case AppLanguage.Slovak: return "sk";
+                case AppLanguage.Bulgarian: return "bg";
+                case AppLanguage.Croatian: return "hr";
+                case AppLanguage.Bengali: return "bn";
+                case AppLanguage.Thai: return "th";
+                case AppLanguage.Malay: return "ms";
+                case AppLanguage.Filipino: return "fil";
+                case AppLanguage.Estonian: return "et";
+                case AppLanguage.Latvian: return "lv";
+                case AppLanguage.Lithuanian: return "lt";
                 default: return "en";
             }
         }
@@ -163,6 +204,37 @@ namespace LegacySift
                 case "in": return AppLanguage.Indonesian;
                 case "vi":
                 case "vi-vn": return AppLanguage.Vietnamese;
+                case "da":
+                case "da-dk": return AppLanguage.Danish;
+                case "nb":
+                case "nb-no":
+                case "no":
+                case "no-no":
+                case "nn":
+                case "nn-no": return AppLanguage.NorwegianBokmal;
+                case "fi":
+                case "fi-fi": return AppLanguage.Finnish;
+                case "sk":
+                case "sk-sk": return AppLanguage.Slovak;
+                case "bg":
+                case "bg-bg": return AppLanguage.Bulgarian;
+                case "hr":
+                case "hr-hr": return AppLanguage.Croatian;
+                case "bn":
+                case "bn-bd":
+                case "bn-in": return AppLanguage.Bengali;
+                case "th":
+                case "th-th": return AppLanguage.Thai;
+                case "ms":
+                case "ms-my": return AppLanguage.Malay;
+                case "fil":
+                case "fil-ph": return AppLanguage.Filipino;
+                case "et":
+                case "et-ee": return AppLanguage.Estonian;
+                case "lv":
+                case "lv-lv": return AppLanguage.Latvian;
+                case "lt":
+                case "lt-lt": return AppLanguage.Lithuanian;
                 default: return AppLanguage.English;
             }
         }

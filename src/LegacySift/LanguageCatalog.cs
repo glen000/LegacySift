@@ -56,7 +56,20 @@ namespace LegacySift
         Sweden,
         SouthKorea,
         Indonesia,
-        Vietnam
+        Vietnam,
+        Denmark,
+        Norway,
+        Finland,
+        Slovakia,
+        Bulgaria,
+        Croatia,
+        Bangladesh,
+        Thailand,
+        Malaysia,
+        Philippines,
+        Estonia,
+        Latvia,
+        Lithuania
     }
 
     internal static class LanguageCatalog
@@ -65,24 +78,37 @@ namespace LegacySift
         {
             new LanguageInfo(AppLanguage.English, "EN", "English", "English", FlagKind.UnitedKingdom),
             new LanguageInfo(AppLanguage.Italian, "IT", "Italiano", "Italian", FlagKind.Italy),
-            new LanguageInfo(AppLanguage.German, "DE", "Deutsch", "German", FlagKind.Germany),
-            new LanguageInfo(AppLanguage.French, "FR", "Français", "French", FlagKind.France),
-            new LanguageInfo(AppLanguage.Spanish, "ES", "Español", "Spanish", FlagKind.Spain),
-            new LanguageInfo(AppLanguage.Portuguese, "PT", "Português", "Portuguese", FlagKind.Portugal),
-            new LanguageInfo(AppLanguage.Polish, "PL", "Polski", "Polish", FlagKind.Poland),
+            new LanguageInfo(AppLanguage.Bengali, "BN", "বাংলা", "Bengali", FlagKind.Bangladesh),
+            new LanguageInfo(AppLanguage.Bulgarian, "BG", "Български", "Bulgarian", FlagKind.Bulgaria),
+            new LanguageInfo(AppLanguage.ChineseSimplified, "ZH", "简体中文", "Chinese (Simplified)", FlagKind.China),
+            new LanguageInfo(AppLanguage.Croatian, "HR", "Hrvatski", "Croatian", FlagKind.Croatia),
+            new LanguageInfo(AppLanguage.Czech, "CS", "Čeština", "Czech", FlagKind.CzechRepublic),
+            new LanguageInfo(AppLanguage.Danish, "DA", "Dansk", "Danish", FlagKind.Denmark),
             new LanguageInfo(AppLanguage.Dutch, "NL", "Nederlands", "Dutch", FlagKind.Netherlands),
+            new LanguageInfo(AppLanguage.Estonian, "ET", "Eesti", "Estonian", FlagKind.Estonia),
+            new LanguageInfo(AppLanguage.Filipino, "FIL", "Filipino", "Filipino", FlagKind.Philippines),
+            new LanguageInfo(AppLanguage.Finnish, "FI", "Suomi", "Finnish", FlagKind.Finland),
+            new LanguageInfo(AppLanguage.French, "FR", "Français", "French", FlagKind.France),
+            new LanguageInfo(AppLanguage.German, "DE", "Deutsch", "German", FlagKind.Germany),
+            new LanguageInfo(AppLanguage.Greek, "EL", "Ελληνικά", "Greek", FlagKind.Greece),
+            new LanguageInfo(AppLanguage.Hindi, "HI", "हिन्दी", "Hindi", FlagKind.India),
+            new LanguageInfo(AppLanguage.Hungarian, "HU", "Magyar", "Hungarian", FlagKind.Hungary),
+            new LanguageInfo(AppLanguage.Indonesian, "ID", "Bahasa Indonesia", "Indonesian", FlagKind.Indonesia),
+            new LanguageInfo(AppLanguage.Japanese, "JA", "日本語", "Japanese", FlagKind.Japan),
+            new LanguageInfo(AppLanguage.Korean, "KO", "한국어", "Korean", FlagKind.SouthKorea),
+            new LanguageInfo(AppLanguage.Latvian, "LV", "Latviešu", "Latvian", FlagKind.Latvia),
+            new LanguageInfo(AppLanguage.Lithuanian, "LT", "Lietuvių", "Lithuanian", FlagKind.Lithuania),
+            new LanguageInfo(AppLanguage.Malay, "MS", "Bahasa Melayu", "Malay", FlagKind.Malaysia),
+            new LanguageInfo(AppLanguage.NorwegianBokmal, "NB", "Norsk bokmål", "Norwegian Bokmål", FlagKind.Norway),
+            new LanguageInfo(AppLanguage.Polish, "PL", "Polski", "Polish", FlagKind.Poland),
+            new LanguageInfo(AppLanguage.Portuguese, "PT", "Português", "Portuguese", FlagKind.Portugal),
+            new LanguageInfo(AppLanguage.Romanian, "RO", "Română", "Romanian", FlagKind.Romania),
+            new LanguageInfo(AppLanguage.Slovak, "SK", "Slovenčina", "Slovak", FlagKind.Slovakia),
+            new LanguageInfo(AppLanguage.Spanish, "ES", "Español", "Spanish", FlagKind.Spain),
+            new LanguageInfo(AppLanguage.Swedish, "SV", "Svenska", "Swedish", FlagKind.Sweden),
+            new LanguageInfo(AppLanguage.Thai, "TH", "ไทย", "Thai", FlagKind.Thailand),
             new LanguageInfo(AppLanguage.Turkish, "TR", "Türkçe", "Turkish", FlagKind.Turkey),
             new LanguageInfo(AppLanguage.Ukrainian, "UK", "Українська", "Ukrainian", FlagKind.Ukraine),
-            new LanguageInfo(AppLanguage.ChineseSimplified, "ZH", "简体中文", "Chinese (Simplified)", FlagKind.China),
-            new LanguageInfo(AppLanguage.Japanese, "JA", "日本語", "Japanese", FlagKind.Japan),
-            new LanguageInfo(AppLanguage.Hindi, "HI", "हिन्दी", "Hindi", FlagKind.India),
-            new LanguageInfo(AppLanguage.Romanian, "RO", "Română", "Romanian", FlagKind.Romania),
-            new LanguageInfo(AppLanguage.Czech, "CS", "Čeština", "Czech", FlagKind.CzechRepublic),
-            new LanguageInfo(AppLanguage.Greek, "EL", "Ελληνικά", "Greek", FlagKind.Greece),
-            new LanguageInfo(AppLanguage.Hungarian, "HU", "Magyar", "Hungarian", FlagKind.Hungary),
-            new LanguageInfo(AppLanguage.Swedish, "SV", "Svenska", "Swedish", FlagKind.Sweden),
-            new LanguageInfo(AppLanguage.Korean, "KO", "한국어", "Korean", FlagKind.SouthKorea),
-            new LanguageInfo(AppLanguage.Indonesian, "ID", "Bahasa Indonesia", "Indonesian", FlagKind.Indonesia),
             new LanguageInfo(AppLanguage.Vietnamese, "VI", "Tiếng Việt", "Vietnamese", FlagKind.Vietnam)
         };
 
@@ -225,6 +251,59 @@ namespace LegacySift
                             g.FillPolygon(yellow, points);
                         }
                         break;
+                    case FlagKind.Denmark:
+                        DrawNordicCross(g, width, height, Color.FromArgb(198, 12, 48), Color.White);
+                        break;
+                    case FlagKind.Norway:
+                        g.Clear(Color.FromArgb(186, 12, 47));
+                        using (var white = new SolidBrush(Color.White))
+                        using (var blue = new SolidBrush(Color.FromArgb(0, 32, 91)))
+                        {
+                            g.FillRectangle(white, 8, 0, 5, height);
+                            g.FillRectangle(white, 0, 6, width, 5);
+                            g.FillRectangle(blue, 9, 0, 3, height);
+                            g.FillRectangle(blue, 0, 7, width, 3);
+                        }
+                        break;
+                    case FlagKind.Finland:
+                        DrawNordicCross(g, width, height, Color.White, Color.FromArgb(0, 53, 128));
+                        break;
+                    case FlagKind.Slovakia:
+                        FillHorizontal(g, rect, Color.White, Color.FromArgb(11, 78, 162), Color.FromArgb(238, 28, 37));
+                        break;
+                    case FlagKind.Bulgaria:
+                        FillHorizontal(g, rect, Color.White, Color.FromArgb(0, 150, 110), Color.FromArgb(214, 38, 18));
+                        break;
+                    case FlagKind.Croatia:
+                        FillHorizontal(g, rect, Color.FromArgb(255, 0, 0), Color.White, Color.FromArgb(23, 23, 150));
+                        break;
+                    case FlagKind.Bangladesh:
+                        g.Clear(Color.FromArgb(0, 106, 78));
+                        using (var red = new SolidBrush(Color.FromArgb(244, 42, 65)))
+                            g.FillEllipse(red, 8, 4, 10, 10);
+                        break;
+                    case FlagKind.Thailand:
+                        FillFiveBands(g, rect, Color.FromArgb(165, 25, 49), Color.White, Color.FromArgb(45, 42, 74));
+                        break;
+                    case FlagKind.Malaysia:
+                        FillStripes(g, rect, Color.FromArgb(204, 0, 1), Color.White, 8);
+                        using (var blue = new SolidBrush(Color.FromArgb(1, 40, 108)))
+                            g.FillRectangle(blue, 0, 0, 13, 9);
+                        break;
+                    case FlagKind.Philippines:
+                        FillTwoBands(g, rect, Color.FromArgb(0, 56, 168), Color.FromArgb(206, 17, 38));
+                        using (var white = new SolidBrush(Color.White))
+                            g.FillPolygon(white, new[] { new Point(0, 0), new Point(12, height / 2), new Point(0, height) });
+                        break;
+                    case FlagKind.Estonia:
+                        FillHorizontal(g, rect, Color.FromArgb(72, 145, 220), Color.Black, Color.White);
+                        break;
+                    case FlagKind.Latvia:
+                        FillThreeBands(g, rect, Color.FromArgb(158, 48, 57), Color.White, Color.FromArgb(158, 48, 57), 0.4F, 0.2F);
+                        break;
+                    case FlagKind.Lithuania:
+                        FillHorizontal(g, rect, Color.FromArgb(253, 185, 19), Color.FromArgb(0, 106, 68), Color.FromArgb(193, 39, 45));
+                        break;
                     case FlagKind.UnitedKingdom:
                         DrawUnitedKingdom(g, rect);
                         break;
@@ -252,6 +331,41 @@ namespace LegacySift
                 g.DrawLine(whiteCross, rect.Left, rect.Top + rect.Height / 2, rect.Right, rect.Top + rect.Height / 2);
                 g.DrawLine(redCross, rect.Left + rect.Width / 2, rect.Top, rect.Left + rect.Width / 2, rect.Bottom);
                 g.DrawLine(redCross, rect.Left, rect.Top + rect.Height / 2, rect.Right, rect.Top + rect.Height / 2);
+            }
+        }
+
+        private static void DrawNordicCross(Graphics g, int width, int height, Color background, Color cross)
+        {
+            g.Clear(background);
+            using (var brush = new SolidBrush(cross))
+            {
+                g.FillRectangle(brush, 8, 0, 3, height);
+                g.FillRectangle(brush, 0, 7, width, 3);
+            }
+        }
+
+        private static void FillFiveBands(Graphics g, Rectangle rect, Color outer, Color inner, Color center)
+        {
+            var unit = Math.Max(1, rect.Height / 6);
+            using (var outerBrush = new SolidBrush(outer))
+            using (var innerBrush = new SolidBrush(inner))
+            using (var centerBrush = new SolidBrush(center))
+            {
+                g.FillRectangle(outerBrush, rect);
+                g.FillRectangle(innerBrush, rect.Left, rect.Top + unit, rect.Width, unit);
+                g.FillRectangle(centerBrush, rect.Left, rect.Top + unit * 2, rect.Width, unit * 2);
+                g.FillRectangle(innerBrush, rect.Left, rect.Top + unit * 4, rect.Width, unit);
+            }
+        }
+
+        private static void FillStripes(Graphics g, Rectangle rect, Color first, Color second, int stripeCount)
+        {
+            var stripeHeight = Math.Max(1F, rect.Height / (float)stripeCount);
+            using (var firstBrush = new SolidBrush(first))
+            using (var secondBrush = new SolidBrush(second))
+            {
+                for (var i = 0; i < stripeCount; i++)
+                    g.FillRectangle(i % 2 == 0 ? firstBrush : secondBrush, rect.Left, rect.Top + i * stripeHeight, rect.Width, stripeHeight + 1F);
             }
         }
 

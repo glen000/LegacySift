@@ -273,7 +273,7 @@ namespace LegacySift
                 Name = "SummaryPanel",
                 Dock = DockStyle.Fill,
                 AutoSize = false,
-                Height = 54,
+                Height = 50,
                 BackColor = Color.FromArgb(245, 247, 250),
                 Padding = new Padding(7, 4, 7, 4),
                 Margin = new Padding(0, 1, 0, 3)
@@ -294,7 +294,7 @@ namespace LegacySift
             {
                 Name = "ResultsTabs",
                 Dock = DockStyle.Fill,
-                MinimumSize = new Size(0, 80),
+                MinimumSize = new Size(0, 170),
                 Margin = new Padding(0),
                 Multiline = true
             };
@@ -302,6 +302,10 @@ namespace LegacySift
             _versionGrid = CreateGrid();
             _duplicateGrid = CreateGrid();
             _errorGrid = CreateGrid();
+            _uniqueGrid.Name = "UniqueGrid";
+            _versionGrid.Name = "VersionGrid";
+            _duplicateGrid.Name = "DuplicateGrid";
+            _errorGrid.Name = "ErrorGrid";
             AddResultTab(L10n.T("TabRecover"), L10n.T("TabRecoverHelp"), _uniqueGrid);
             AddResultTab(L10n.T("TabVersions"), L10n.T("TabVersionsHelp"), _versionGrid);
             AddResultTab(L10n.T("TabDuplicates"), L10n.T("TabDuplicatesHelp"), _duplicateGrid);
@@ -319,8 +323,9 @@ namespace LegacySift
                 Text = L10n.T("CleanupGroup"),
                 Dock = DockStyle.Fill,
                 AutoSize = true,
-                Padding = new Padding(7, 5, 7, 5),
-                Margin = new Padding(0, 3, 0, 0)
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Padding = new Padding(7, 3, 7, 3),
+                Margin = new Padding(0, 2, 0, 0)
             };
 
             var cleanupLayout = new TableLayoutPanel
@@ -333,16 +338,23 @@ namespace LegacySift
                 Margin = new Padding(0)
             };
             cleanupLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             _cleanupExplanationLabel = new Label
             {
                 Name = "CleanupExplanation",
                 AutoSize = false,
-                Height = 48,
+                Height = 36,
                 Dock = DockStyle.Fill,
                 Text = L10n.T("CleanupBeforeAnalysis"),
                 Font = new Font(Font.FontFamily, 9F, FontStyle.Bold),
-                Padding = new Padding(2, 0, 2, 1)
+                Padding = new Padding(2, 0, 2, 0),
+                Margin = new Padding(0)
             };
             cleanupLayout.Controls.Add(_cleanupExplanationLabel, 0, 0);
 
@@ -416,7 +428,7 @@ namespace LegacySift
                 AutoSize = true,
                 Text = L10n.T("Confirm"),
                 Font = new Font(Font, FontStyle.Bold),
-                Margin = new Padding(3, 1, 3, 3),
+                Margin = new Padding(3, 0, 3, 1),
                 Enabled = false
             };
             _confirmCheck.CheckedChanged += (s, e) => UpdateCleanupEnabled();
@@ -426,12 +438,13 @@ namespace LegacySift
             {
                 Name = "ProtectedReminder",
                 AutoSize = false,
-                Height = 44,
+                Height = 22,
                 Dock = DockStyle.Fill,
                 Text = L10n.T("ProtectedReminder"),
                 ForeColor = Color.FromArgb(27, 94, 32),
                 Font = new Font(Font, FontStyle.Bold),
-                Margin = new Padding(3, 2, 3, 4)
+                Margin = new Padding(3, 0, 3, 1),
+                TextAlign = ContentAlignment.MiddleLeft
             };
             cleanupLayout.Controls.Add(protectedReminder, 0, 4);
 
@@ -449,7 +462,7 @@ namespace LegacySift
                 Name = "CleanupButton",
                 Text = L10n.T("Cleanup"),
                 AutoSize = true,
-                MinimumSize = new Size(340, 36),
+                MinimumSize = new Size(340, 34),
                 Enabled = false,
                 Font = new Font(Font, FontStyle.Bold),
                 Padding = new Padding(8, 2, 8, 2)
@@ -460,7 +473,7 @@ namespace LegacySift
                 Name = "RestoreButton",
                 Text = L10n.T("Restore"),
                 AutoSize = true,
-                MinimumSize = new Size(170, 36),
+                MinimumSize = new Size(170, 34),
                 Margin = new Padding(8, 0, 0, 0)
             };
             _restoreButton.Click += async (s, e) => await RestoreQuarantineAsync();

@@ -40,6 +40,19 @@ namespace LegacySift
                 case AppLanguage.Korean: return Ko;
                 case AppLanguage.Indonesian: return Id;
                 case AppLanguage.Vietnamese: return Vi;
+                case AppLanguage.Danish: return Da;
+                case AppLanguage.NorwegianBokmal: return Nb;
+                case AppLanguage.Finnish: return Fi;
+                case AppLanguage.Slovak: return Sk;
+                case AppLanguage.Bulgarian: return Bg;
+                case AppLanguage.Croatian: return Hr;
+                case AppLanguage.Bengali: return Bn;
+                case AppLanguage.Thai: return Th;
+                case AppLanguage.Malay: return Ms;
+                case AppLanguage.Filipino: return Fil;
+                case AppLanguage.Estonian: return Et;
+                case AppLanguage.Latvian: return Lv;
+                case AppLanguage.Lithuanian: return Lt;
                 default: return En;
             }
         }
