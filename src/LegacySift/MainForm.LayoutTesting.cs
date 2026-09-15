@@ -38,8 +38,6 @@ namespace LegacySift
                 // interactive DPI-aware form. AutoScale is disabled in this
                 // deterministic harness, so reproduce that part explicitly.
                 _cleanupExplanationLabel.Height = (int)System.Math.Ceiling(_cleanupExplanationLabel.Height * scaleFactor);
-                var reminder = Controls.Find("ProtectedReminder", true)[0];
-                reminder.Height = (int)System.Math.Ceiling(reminder.Height * scaleFactor);
             }
             ClientSize = clientSize;
 

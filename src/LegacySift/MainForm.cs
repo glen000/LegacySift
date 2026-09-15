@@ -294,7 +294,7 @@ namespace LegacySift
             {
                 Name = "ResultsTabs",
                 Dock = DockStyle.Fill,
-                MinimumSize = new Size(0, 170),
+                MinimumSize = new Size(0, 145),
                 Margin = new Padding(0),
                 Multiline = true
             };
@@ -334,11 +334,10 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 ColumnCount = 1,
-                RowCount = 6,
+                RowCount = 5,
                 Margin = new Padding(0)
             };
             cleanupLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             cleanupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -437,16 +436,12 @@ namespace LegacySift
             var protectedReminder = new Label
             {
                 Name = "ProtectedReminder",
-                AutoSize = false,
-                Height = 22,
-                Dock = DockStyle.Fill,
+                AutoSize = true,
                 Text = L10n.T("ProtectedReminder"),
                 ForeColor = Color.FromArgb(27, 94, 32),
                 Font = new Font(Font, FontStyle.Bold),
-                Margin = new Padding(3, 0, 3, 1),
-                TextAlign = ContentAlignment.MiddleLeft
+                Margin = new Padding(12, 8, 3, 0)
             };
-            cleanupLayout.Controls.Add(protectedReminder, 0, 4);
 
             var cleanupButtons = new FlowLayoutPanel
             {
@@ -479,7 +474,8 @@ namespace LegacySift
             _restoreButton.Click += async (s, e) => await RestoreQuarantineAsync();
             cleanupButtons.Controls.Add(_cleanupButton);
             cleanupButtons.Controls.Add(_restoreButton);
-            cleanupLayout.Controls.Add(cleanupButtons, 0, 5);
+            cleanupButtons.Controls.Add(protectedReminder);
+            cleanupLayout.Controls.Add(cleanupButtons, 0, 4);
 
             cleanupBox.Controls.Add(cleanupLayout);
             return cleanupBox;
