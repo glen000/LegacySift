@@ -359,6 +359,17 @@ namespace LegacySift.Tests
             using (var form = new MainForm())
             {
                 form.PrepareLayoutTest(state, configuration.ClientSize, configuration.ScaleFactor);
+                if (Math.Abs(configuration.ScaleFactor - 1F) > 0.001F)
+                {
+                    // The deterministic harness disables WinForms AutoScale.
+                    // Reproduce the DPI-scaled height of this fixed summary
+                    // panel after the form has materialized on the runner.
+                    var summaryPanel = Find(form, "SummaryPanel");
+                    summaryPanel.Height = (int)Math.Ceiling(summaryPanel.Height * configuration.ScaleFactor);
+                    summaryPanel.Parent.PerformLayout();
+                    form.PerformLayout();
+                    Application.DoEvents();
+                }
                 var prefix = info.Code + " " + configuration.Name + " " + state + ": ";
                 var required = new[]
                 {
