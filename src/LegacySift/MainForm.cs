@@ -436,27 +436,35 @@ namespace LegacySift
             var protectedReminder = new Label
             {
                 Name = "ProtectedReminder",
-                AutoSize = true,
+                AutoSize = false,
+                Dock = DockStyle.Fill,
                 Text = L10n.T("ProtectedReminder"),
                 ForeColor = Color.FromArgb(27, 94, 32),
                 Font = new Font(Font, FontStyle.Bold),
-                Margin = new Padding(12, 8, 3, 0)
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(12, 0, 3, 0)
             };
 
-            var cleanupButtons = new FlowLayoutPanel
+            var cleanupButtons = new TableLayoutPanel
             {
                 Name = "CleanupButtons",
                 Dock = DockStyle.Fill,
                 AutoSize = true,
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = true,
+                ColumnCount = 3,
+                RowCount = 1,
+                GrowStyle = TableLayoutPanelGrowStyle.FixedSize,
                 Margin = new Padding(0)
             };
+            cleanupButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
+            cleanupButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 24F));
+            cleanupButtons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
+            cleanupButtons.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             _cleanupButton = new Button
             {
                 Name = "CleanupButton",
                 Text = L10n.T("Cleanup"),
                 AutoSize = true,
+                Dock = DockStyle.Fill,
                 MinimumSize = new Size(340, 34),
                 Enabled = false,
                 Font = new Font(Font, FontStyle.Bold),
@@ -468,13 +476,14 @@ namespace LegacySift
                 Name = "RestoreButton",
                 Text = L10n.T("Restore"),
                 AutoSize = true,
+                Dock = DockStyle.Fill,
                 MinimumSize = new Size(170, 34),
                 Margin = new Padding(8, 0, 0, 0)
             };
             _restoreButton.Click += async (s, e) => await RestoreQuarantineAsync();
-            cleanupButtons.Controls.Add(_cleanupButton);
-            cleanupButtons.Controls.Add(_restoreButton);
-            cleanupButtons.Controls.Add(protectedReminder);
+            cleanupButtons.Controls.Add(_cleanupButton, 0, 0);
+            cleanupButtons.Controls.Add(_restoreButton, 1, 0);
+            cleanupButtons.Controls.Add(protectedReminder, 2, 0);
             cleanupLayout.Controls.Add(cleanupButtons, 0, 4);
 
             cleanupBox.Controls.Add(cleanupLayout);
