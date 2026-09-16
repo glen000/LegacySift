@@ -532,6 +532,8 @@ namespace LegacySift.Tests
                         Console.WriteLine("LAYOUT_ALLOCATION theme=" + theme + " " + string.Join(" ", allocationNames.Select(name => name + "=" + BoundsInForm(Find(form, name), form))));
                     }
                     Assert(grid.Rows.Count >= 4, prefix + "test data must expose at least four actual result rows");
+                    var rowTextHeight = TextRenderer.MeasureText("Ag", grid.Font).Height;
+                    Assert(grid.RowTemplate.Height >= rowTextHeight + 2, prefix + "compact result rows must retain vertical text breathing room");
                     if (grid.ClientSize.Height < usefulMinimum)
                     {
                         Console.WriteLine("LAYOUT_SHORT " + prefix +

@@ -602,6 +602,8 @@ namespace LegacySift
             grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = L10n.T("GridSize"), DataPropertyName = "Size", FillWeight = 10 });
             grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = L10n.T("GridCurrent"), DataPropertyName = "Reference", FillWeight = 32 });
             grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = L10n.T("GridNote"), DataPropertyName = "Note", FillWeight = 30 });
+            grid.RowTemplate.Height = 20;
+            grid.RowTemplate.MinimumHeight = 18;
             grid.CellDoubleClick += (s, e) => OpenSelectedSource((DataGridView)s, e.RowIndex);
             return grid;
         }
