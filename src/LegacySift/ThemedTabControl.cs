@@ -10,7 +10,9 @@ namespace LegacySift
         public ThemedTabControl()
         {
             DrawMode = TabDrawMode.OwnerDrawFixed;
-            Padding = new Point(12, 4);
+            // Keep translated result tabs on one compact desktop row. Text is
+            // never shortened; only decorative horizontal padding is reduced.
+            Padding = new Point(6, 4);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
         }
 
@@ -40,7 +42,7 @@ namespace LegacySift
                     e.Graphics.FillRectangle(accent, bounds.X + 1, bounds.Y + 1, bounds.Width - 2, 3);
             }
 
-            var textBounds = Rectangle.Inflate(bounds, -8, -3);
+            var textBounds = Rectangle.Inflate(bounds, -6, -3);
             TextRenderer.DrawText(
                 e.Graphics,
                 TabPages[e.Index].Text,
