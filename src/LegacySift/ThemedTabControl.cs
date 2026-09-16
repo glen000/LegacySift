@@ -13,7 +13,7 @@ namespace LegacySift
             DrawMode = TabDrawMode.OwnerDrawFixed;
             // Keep translated result tabs on one compact desktop row. Text is
             // never shortened; only decorative horizontal padding is reduced.
-            Padding = new Point(6, 4);
+            Padding = new Point(8, 4);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
         }
 
