@@ -53,7 +53,10 @@ namespace LegacySift
                     e.Graphics.FillRectangle(accent, bounds.X + 1, bounds.Y + 1, bounds.Width - 2, 3);
             }
 
-            var textBounds = Rectangle.Inflate(bounds, -6, -3);
+            // The native tab rectangle already includes translated-text
+            // padding. Keep only a one-pixel border inset so the owner draw
+            // does not subtract that space a second time.
+            var textBounds = Rectangle.Inflate(bounds, -1, -3);
             TextRenderer.DrawText(
                 e.Graphics,
                 TabPages[e.Index].Text,

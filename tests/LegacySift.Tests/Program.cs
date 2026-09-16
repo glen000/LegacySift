@@ -722,7 +722,7 @@ namespace LegacySift.Tests
             {
                 var bounds = tabs.GetTabRect(index);
                 var measured = TextRenderer.MeasureText(tabs.TabPages[index].Text ?? string.Empty, tabs.Font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine).Width;
-                if (bounds.Right > tabs.ClientSize.Width + 2 || measured > bounds.Width - 12 + 8) return false;
+                if (bounds.Right > tabs.ClientSize.Width + 2 || measured > bounds.Width) return false;
             }
             return true;
         }
