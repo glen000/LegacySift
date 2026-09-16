@@ -63,7 +63,7 @@ namespace LegacySift
                 Font,
                 textBounds,
                 selected ? _palette.Text : _palette.SecondaryText,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
 
             if (Focused && selected)
                 ControlPaint.DrawFocusRectangle(e.Graphics, Rectangle.Inflate(bounds, -5, -5), _palette.Text, _palette.Surface);

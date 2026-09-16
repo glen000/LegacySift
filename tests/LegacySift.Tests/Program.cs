@@ -730,7 +730,7 @@ namespace LegacySift.Tests
             for (var index = 0; index < tabs.TabPages.Count; index++)
             {
                 var bounds = tabs.GetTabRect(index);
-                var measured = TextRenderer.MeasureText(tabs.TabPages[index].Text ?? string.Empty, tabs.Font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine).Width;
+                var measured = MeasureTabText(tabs.TabPages[index].Text, tabs.Font);
                 if (bounds.Right > tabs.ClientSize.Width + 2 || measured > bounds.Width) return false;
             }
             return true;
@@ -741,9 +741,14 @@ namespace LegacySift.Tests
             return string.Join(", ", tabs.TabPages.Cast<TabPage>().Select((page, index) =>
             {
                 var bounds = tabs.GetTabRect(index);
-                var measured = TextRenderer.MeasureText(page.Text ?? string.Empty, tabs.Font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine).Width;
+                var measured = MeasureTabText(page.Text, tabs.Font);
                 return page.Text + " measured=" + measured + " bounds=" + bounds;
             }));
+        }
+
+        private static int MeasureTabText(string text, Font font)
+        {
+            return TextRenderer.MeasureText(text ?? string.Empty, font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine | TextFormatFlags.NoPadding).Width;
         }
 
         private sealed class LayoutConfiguration
