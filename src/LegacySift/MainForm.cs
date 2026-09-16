@@ -96,7 +96,7 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 ColumnCount = 3,
-                Padding = new Padding(12, 5, 12, 4),
+                Padding = new Padding(12, 2, 12, 1),
                 BackColor = SystemColors.ControlLightLight
             };
             header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
@@ -138,7 +138,7 @@ namespace LegacySift
                 Name = "ThemeButton",
                 Text = L10n.T("ThemeButton"),
                 AutoSize = true,
-                Margin = new Padding(10, 3, 0, 0)
+                Margin = new Padding(10, 2, 0, 0)
             };
             _themeButton.Click += ChangeTheme;
             _languageButton = new Button
@@ -146,7 +146,7 @@ namespace LegacySift
                 Name = "LanguageButton",
                 Text = L10n.T("LanguageButton"),
                 AutoSize = true,
-                Margin = new Padding(10, 3, 0, 0)
+                Margin = new Padding(10, 2, 0, 0)
             };
             _languageButton.Click += ChangeLanguage;
             header.Controls.Add(brand, 0, 0);
@@ -173,7 +173,7 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 6,
-                Padding = new Padding(8, 6, 8, 2)
+                Padding = new Padding(8, 4, 8, 2)
             };
             outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
