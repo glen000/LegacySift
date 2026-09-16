@@ -173,7 +173,7 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 6,
-                Padding = new Padding(8, 6, 8, 6)
+                Padding = new Padding(8, 6, 8, 2)
             };
             outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -363,7 +363,7 @@ namespace LegacySift
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = new Padding(7, 3, 7, 3),
-                Margin = new Padding(0, 2, 0, 0)
+                Margin = new Padding(0)
             };
 
             var cleanupLayout = new TableLayoutPanel
