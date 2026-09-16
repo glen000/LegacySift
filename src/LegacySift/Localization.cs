@@ -57,6 +57,8 @@ namespace LegacySift
             // A user who accidentally chooses an unfamiliar language must still be able to find the way back.
             if (string.Equals(key, "LanguageButton", StringComparison.Ordinal))
                 return "Language / Lingua…";
+            if (string.Equals(key, "ThemeButton", StringComparison.Ordinal))
+                return "Theme / Tema…";
             if (string.Equals(key, "LanguageRestartTitle", StringComparison.Ordinal))
                 return "Language / Lingua";
             if (string.Equals(key, "LanguageRestart", StringComparison.Ordinal))

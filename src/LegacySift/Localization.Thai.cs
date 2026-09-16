@@ -5,7 +5,7 @@ namespace LegacySift
     internal static partial class L10n
     {
         private static readonly Dictionary<string, string> Th = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — ทำความสะอาดโฟลเดอร์เก่าอย่างปลอดภัย",
+            "AppTitle", "LegacySift 0.2.3-alpha — ทำความสะอาดโฟลเดอร์เก่าอย่างปลอดภัย",
             "TabWork", "เปรียบเทียบและทำความสะอาด",
             "TabHelp", "คำแนะนำและความปลอดภัย",
             "LanguageButton", "ภาษา…",

@@ -5,7 +5,7 @@ namespace LegacySift
     internal static partial class L10n
     {
         private static readonly Dictionary<string, string> Lv = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — droša vecās mapes tīrīšana",
+            "AppTitle", "LegacySift 0.2.3-alpha — droša vecās mapes tīrīšana",
             "TabWork", "Salīdzināt un tīrīt",
             "TabHelp", "Norādījumi un drošība",
             "LanguageButton", "Valoda…",

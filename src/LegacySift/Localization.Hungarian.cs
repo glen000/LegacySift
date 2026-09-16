@@ -5,7 +5,7 @@ namespace LegacySift
     internal static partial class L10n
     {
         private static readonly Dictionary<string, string> Hu = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — régi mappa biztonságos tisztítása",
+            "AppTitle", "LegacySift 0.2.3-alpha — régi mappa biztonságos tisztítása",
             "TabWork", "Összehasonlítás és tisztítás",
             "TabHelp", "Útmutató és biztonság",
             "LanguageButton", "Nyelv…",

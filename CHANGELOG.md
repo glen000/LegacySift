@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.3-alpha
+
+Controlled visual identity and theme refinement.
+
+- Added production LegacySift logo, simplified mark, raster icon set and multi-resolution Windows application icon.
+- Embedded the icon in the executable and applied it to the main window and dialogs.
+- Added a centralized light/dark palette based on LegacySift navy, blue and legacy gray.
+- Added a compact, immediately applied System/Light/Dark preference that persists beside the language setting.
+- Refined folder panels, actions, tabs, result grids, summaries, progress and dialogs while retaining keyboard focus and native desktop behavior.
+- Extended the Windows layout and screenshot matrix to cover both light and dark themes without reducing the 34-language baseline.
+- Preserved the constrained 1366×768 workflow, visible result rows and complete cleanup controls.
+- Comparison and cleanup logic under `Core/*` is unchanged.
+
 ## 0.2.2-alpha
 
 Final multilingual UI and repeatable layout QA pass.

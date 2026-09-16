@@ -1,6 +1,6 @@
 # LegacySift localization
 
-LegacySift 0.2.2-alpha ships 34 complete UI dictionaries. English is the final fallback.
+LegacySift 0.2.3-alpha ships 34 complete UI dictionaries. English is the final fallback. The theme selector adds localized System, Light and Dark terms without changing the established workflow vocabulary.
 
 | Code | Language | Native name | Windows UI mapping |
 |---|---|---|---|

@@ -1,5 +1,9 @@
 # LegacySift
 
+<p align="center">
+  <img src="docs/assets/legacysift-logo-light.png" alt="LegacySift — old files crossing a safe comparison bridge toward the protected current folder" width="560">
+</p>
+
 LegacySift is a simple, safe tool for comparing a folder recovered from an old computer, disk, or backup with the folder you use today.
 
 Its direction is intentionally fixed:
@@ -40,7 +44,9 @@ See [Localization](docs/LOCALIZATION.md) and [UI layout QA](docs/UI_LAYOUT_QA.md
 
 ## Status
 
-LegacySift is currently in alpha development. Do not use an alpha build as the only copy of important data.
+LegacySift 0.2.3-alpha is currently in alpha development. It includes the refined light/dark visual system and the System/Light/Dark preference while preserving the 34-language safety workflow. Do not use an alpha build as the only copy of important data.
+
+See [Visual identity and themes](docs/VISUAL_THEME.md) for the asset locations, theme behavior and deliberate native-control compromises.
 
 ## License
 

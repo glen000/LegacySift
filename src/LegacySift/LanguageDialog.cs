@@ -28,6 +28,7 @@ namespace LegacySift
             // Intentionally not localized. If someone selects an unfamiliar language,
             // this dialog must always remain easy to find and understand.
             Text = "Language / Lingua";
+            Icon = AppIcon.CreateIcon();
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -138,6 +139,7 @@ namespace LegacySift
 
             AcceptButton = ok;
             CancelButton = cancel;
+            ThemeManager.ApplyTo(this);
         }
 
         protected override void Dispose(bool disposing)

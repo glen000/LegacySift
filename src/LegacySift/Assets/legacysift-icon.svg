@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">LegacySift application icon</title>
+  <desc id="desc">Two gray legacy files cross a navy and blue bridge toward two ordered blue files.</desc>
+  <defs>
+    <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10243E"/>
+      <stop offset="1" stop-color="#0B3D91"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1E88FF"/>
+      <stop offset="1" stop-color="#0B63BC"/>
+    </linearGradient>
+    <linearGradient id="gray" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#B8C1CC"/>
+      <stop offset="1" stop-color="#6B7280"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="7" y="7" width="242" height="242" rx="42" fill="#F5F7FA" stroke="#D8E0EA" stroke-width="7"/>
+
+  <g fill="url(#gray)">
+    <path d="M30 98h37l14 14v48H30z"/>
+    <path d="M67 98v15h14z" fill="#F5F7FA"/>
+    <path d="M67 73h36l14 14v49H67z" opacity=".92"/>
+    <path d="M103 73v15h14z" fill="#F5F7FA"/>
+  </g>
+
+  <path fill="url(#navy)" fill-rule="evenodd"
+        d="M20 172c43 0 55-75 108-75s65 75 108 75v31H20zm55 31h106c-13-35-31-61-53-61s-40 26-53 61z"/>
+  <path d="M20 166c48 0 61-78 108-78s60 78 108 78"
+        fill="none" stroke="url(#blue)" stroke-width="10" stroke-linecap="round"/>
+
+  <g fill="url(#blue)">
+    <path d="M164 95h34l14 14v51h-48z"/>
+    <path d="M198 95v15h14z" fill="#F5F7FA"/>
+    <path d="M194 68h36l15 15v77h-51z"/>
+    <path d="M230 68v16h15z" fill="#F5F7FA"/>
+  </g>
+</svg>

@@ -34,9 +34,13 @@ namespace LegacySift.Tests
                 TestAllTranslations();
                 TestCultureMapping();
                 TestSavedLanguageSettings();
+                TestSavedThemeSettings();
+                TestThemePalettes();
+                TestApplicationIcon();
                 TestScriptCoverage();
                 TestLayoutMatrix();
                 TestLanguageDialogLayout();
+                TestThemeDialogLayout();
                 if (args.Length == 2 && args[0] == "--capture-layout")
                     CaptureRepresentativeLayouts(args[1]);
                 Console.WriteLine("PASS — " + _assertions + " assertions");
@@ -166,8 +170,8 @@ namespace LegacySift.Tests
         {
             var english = L10n.TranslationForTests(AppLanguage.English);
             Assert(LanguageCatalog.All.Count == Enum.GetValues(typeof(AppLanguage)).Length, "language catalog must contain every AppLanguage value");
-            Assert(LanguageCatalog.All.Count == 34, "the final 0.2.2-alpha catalog must contain exactly 34 languages");
-            Assert(english.Count == 116, "English baseline must contain the frozen 116-key UI contract");
+            Assert(LanguageCatalog.All.Count == 34, "the 0.2.3-alpha catalog must preserve exactly 34 languages");
+            Assert(english.Count == 121, "English baseline must contain the 116 frozen workflow keys plus 5 theme keys");
             Assert(LanguageCatalog.All.Select(x => x.Flag).Distinct().Count() == 34, "every supported language must have one cataloged flag");
             Assert(LanguageCatalog.All[0].Language == AppLanguage.English && LanguageCatalog.All[1].Language == AppLanguage.Italian, "English and Italian must remain first for language recovery");
             Assert(LanguageCatalog.All.Skip(2).Select(x => x.EnglishName).SequenceEqual(LanguageCatalog.All.Skip(2).Select(x => x.EnglishName).OrderBy(x => x, StringComparer.Ordinal)), "remaining languages must have a stable English-name alphabetical order");
@@ -238,11 +242,100 @@ namespace LegacySift.Tests
             Assert(L10n.FromCode("nn-NO") == AppLanguage.NorwegianBokmal, "Nynorsk setting must safely use the single Norwegian Bokmål UI");
         }
 
+        private static void TestSavedThemeSettings()
+        {
+            foreach (ThemeMode mode in Enum.GetValues(typeof(ThemeMode)))
+            {
+                var serialized = SettingsStore.SerializeSettings(AppLanguage.Italian, mode);
+                var lines = serialized.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                Assert(SettingsStore.ParseLanguageSetting(lines, AppLanguage.English) == AppLanguage.Italian, mode + " settings must preserve the selected language");
+                Assert(SettingsStore.ParseThemeSetting(lines, ThemeMode.Light) == mode, mode + " theme setting must round-trip");
+            }
+
+            Assert(SettingsStore.ParseThemeSetting(new[] { "theme=unknown" }, ThemeMode.Dark) == ThemeMode.Dark, "unknown theme setting must preserve caller fallback");
+            Assert(SettingsStore.ParseThemeSetting(new[] { "broken=true" }, ThemeMode.Light) == ThemeMode.Light, "unrelated setting line must preserve theme fallback");
+            Assert(SettingsStore.ParseThemeSetting(null, ThemeMode.System) == ThemeMode.System, "missing settings must preserve system theme fallback");
+        }
+
+        private static void TestThemePalettes()
+        {
+            var light = ThemeManager.ResolvePalette(ThemeMode.Light);
+            var dark = ThemeManager.ResolvePalette(ThemeMode.Dark);
+            Assert(!light.IsDark && dark.IsDark, "explicit light and dark modes must resolve deterministically");
+            Assert(light.AppBackground != dark.AppBackground, "light and dark application surfaces must differ");
+            Assert(light.Surface != dark.Surface, "light and dark card surfaces must differ");
+            Assert(light.OldSurface != light.CurrentSurface, "light OLD and CURRENT surfaces must remain distinguishable");
+            Assert(dark.OldSurface != dark.CurrentSurface, "dark OLD and CURRENT surfaces must remain distinguishable");
+            Assert(ContrastRatio(light.Text, light.Surface) >= 4.5, "light primary text must meet WCAG AA contrast on cards");
+            Assert(ContrastRatio(light.SecondaryText, light.Surface) >= 4.5, "light secondary text must meet WCAG AA contrast on cards");
+            Assert(ContrastRatio(dark.Text, dark.Surface) >= 4.5, "dark primary text must meet WCAG AA contrast on cards");
+            Assert(ContrastRatio(dark.SecondaryText, dark.Surface) >= 4.5, "dark secondary text must meet WCAG AA contrast on cards");
+            Assert(ContrastRatio(light.SelectionText, light.Selection) >= 4.5, "light selected grid text must meet WCAG AA contrast");
+            Assert(ContrastRatio(dark.SelectionText, dark.Selection) >= 4.5, "dark selected grid text must meet WCAG AA contrast");
+        }
+
+        private static double ContrastRatio(Color foreground, Color background)
+        {
+            var lighter = Math.Max(RelativeLuminance(foreground), RelativeLuminance(background));
+            var darker = Math.Min(RelativeLuminance(foreground), RelativeLuminance(background));
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        private static double RelativeLuminance(Color color)
+        {
+            Func<byte, double> channel = value =>
+            {
+                var normalized = value / 255.0;
+                return normalized <= 0.03928 ? normalized / 12.92 : Math.Pow((normalized + 0.055) / 1.055, 2.4);
+            };
+            return 0.2126 * channel(color.R) + 0.7152 * channel(color.G) + 0.0722 * channel(color.B);
+        }
+
+        private static void TestApplicationIcon()
+        {
+            using (var stream = typeof(MainForm).Assembly.GetManifestResourceStream(AppIcon.ResourceName))
+                Assert(stream != null && stream.Length > 0, "application icon must be embedded with its stable resource name");
+
+            using (var icon = AppIcon.CreateIcon())
+            using (var bitmap = AppIcon.CreateBitmap(24))
+            {
+                Assert(icon != null, "application icon must be loadable by WinForms");
+                Assert(bitmap.Width == 24 && bitmap.Height == 24, "application icon must render at the compact header size");
+            }
+
+            var iconPath = FindRepositoryFile(Path.Combine("src", "LegacySift", "Assets", "legacysift-icon.ico"));
+            var sizes = new HashSet<int>();
+            using (var reader = new BinaryReader(File.OpenRead(iconPath)))
+            {
+                Assert(reader.ReadUInt16() == 0, "ICO reserved header must be zero");
+                Assert(reader.ReadUInt16() == 1, "application asset must be an ICO container");
+                var count = reader.ReadUInt16();
+                Assert(count >= 7, "application ICO must contain at least seven size entries");
+                for (var i = 0; i < count; i++)
+                {
+                    var width = reader.ReadByte();
+                    var height = reader.ReadByte();
+                    reader.ReadBytes(14);
+                    var resolvedWidth = width == 0 ? 256 : width;
+                    var resolvedHeight = height == 0 ? 256 : height;
+                    Assert(resolvedWidth == resolvedHeight, "every application icon frame must be square");
+                    sizes.Add(resolvedWidth);
+                }
+            }
+            foreach (var expected in new[] { 16, 24, 32, 48, 64, 128, 256 })
+                Assert(sizes.Contains(expected), "application ICO must include a " + expected + "px frame");
+
+            Assert(File.Exists(FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-icon-qa.png"))), "actual-size icon QA contact sheet must be checked in");
+            Assert(File.Exists(FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-logo-light.png"))), "cropped full logo asset must be checked in");
+            Assert(File.Exists(FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-mark.svg"))), "vector brand mark must be checked in");
+        }
+
         private static void TestScriptCoverage()
         {
             Assert(Enum.GetNames(typeof(AppLanguage)).All(x => !x.Equals("Russian", StringComparison.OrdinalIgnoreCase)), "Russian enum value must be absent");
             Assert(LanguageCatalog.All.All(x => !x.Code.Equals("RU", StringComparison.OrdinalIgnoreCase)), "Russian catalog entry must be absent");
             Assert(L10n.T("LanguageButton") == "Language / Lingua…", "language recovery entry must remain bilingual");
+            Assert(L10n.T("ThemeButton") == "Theme / Tema…", "theme recovery entry must remain bilingual");
 
             var scripts = new Dictionary<AppLanguage, string>
             {
@@ -270,6 +363,10 @@ namespace LegacySift.Tests
                 var terms = SafetyTerms(info.Language);
                 var dict = L10n.TranslationForTests(info.Language);
                 var critical = dict["Intro"] + " " + dict["CleanupExplanation"] + " " + dict["Confirm"] + " " + dict["ExactNote"];
+                Assert(!string.IsNullOrWhiteSpace(dict["ThemeTitle"]), info.Code + " theme title must be localized");
+                Assert(!string.IsNullOrWhiteSpace(dict["ThemeSystem"]), info.Code + " system theme choice must be localized");
+                Assert(!string.IsNullOrWhiteSpace(dict["ThemeLight"]), info.Code + " light theme choice must be localized");
+                Assert(!string.IsNullOrWhiteSpace(dict["ThemeDark"]), info.Code + " dark theme choice must be localized");
                 Assert(ContainsIgnoreCase(critical, terms[0]), info.Code + " critical wording must identify OLD");
                 Assert(ContainsIgnoreCase(critical, terms[1]), info.Code + " critical wording must identify CURRENT");
                 Assert(ContainsIgnoreCase(critical, terms[2]), info.Code + " critical wording must identify identical copies");
@@ -336,24 +433,29 @@ namespace LegacySift.Tests
             };
             var allStates = (LayoutTestState[])Enum.GetValues(typeof(LayoutTestState));
 
-            foreach (var info in LanguageCatalog.All)
+            foreach (var theme in new[] { ThemeMode.Light, ThemeMode.Dark })
             {
-                foreach (var configuration in startupConfigurations)
-                    AuditMainForm(info, configuration, LayoutTestState.Initial);
+                ThemeManager.SetMode(theme);
+                foreach (var info in LanguageCatalog.All)
+                {
+                    foreach (var configuration in startupConfigurations)
+                        AuditMainForm(theme, info, configuration, LayoutTestState.Initial);
 
-                var constrained = startupConfigurations[0];
-                foreach (var state in allStates.Where(x => x != LayoutTestState.Initial))
-                    AuditMainForm(info, constrained, state);
+                    var constrained = startupConfigurations[0];
+                    foreach (var state in allStates.Where(x => x != LayoutTestState.Initial))
+                        AuditMainForm(theme, info, constrained, state);
 
-                AuditMainForm(info, startupConfigurations[4], LayoutTestState.AnalysisCompleted);
-                AuditMainForm(info, startupConfigurations[4], LayoutTestState.OtherOptionsExpanded);
-                AuditMainForm(info, startupConfigurations[5], LayoutTestState.AnalysisCompleted);
-                AuditMainForm(info, startupConfigurations[5], LayoutTestState.OtherOptionsExpanded);
+                    AuditMainForm(theme, info, startupConfigurations[4], LayoutTestState.AnalysisCompleted);
+                    AuditMainForm(theme, info, startupConfigurations[4], LayoutTestState.OtherOptionsExpanded);
+                    AuditMainForm(theme, info, startupConfigurations[5], LayoutTestState.AnalysisCompleted);
+                    AuditMainForm(theme, info, startupConfigurations[5], LayoutTestState.OtherOptionsExpanded);
+                }
             }
+            ThemeManager.SetMode(ThemeMode.System);
             L10n.SetLanguage(AppLanguage.English);
         }
 
-        private static void AuditMainForm(LanguageInfo info, LayoutConfiguration configuration, LayoutTestState state)
+        private static void AuditMainForm(ThemeMode theme, LanguageInfo info, LayoutConfiguration configuration, LayoutTestState state)
         {
             L10n.SetLanguage(info.Language);
             using (var form = new MainForm())
@@ -370,10 +472,10 @@ namespace LegacySift.Tests
                     form.PerformLayout();
                     Application.DoEvents();
                 }
-                var prefix = info.Code + " " + configuration.Name + " " + state + ": ";
+                var prefix = theme + " " + info.Code + " " + configuration.Name + " " + state + ": ";
                 var required = new[]
                 {
-                    "LanguageButton", "MainTabs", "WorkPage", "OldPanel", "CurrentPanel", "OldBrowseButton",
+                    "HeaderMark", "ThemeButton", "LanguageButton", "MainTabs", "WorkPage", "OldPanel", "CurrentPanel", "OldBrowseButton",
                     "CurrentBrowseButton", "AnalyzeButton", "ResultsTabs", "CleanupGroup", "CleanupExplanation", "SafetyFolderRadio",
                     "ConfirmCheck", "CleanupButton", "RestoreButton", "ProtectedReminder", "SummaryLabel", "HelpText"
                 };
@@ -390,6 +492,7 @@ namespace LegacySift.Tests
                 var resultBounds = BoundsInForm(Find(form, "ResultsTabs"), form);
                 var cleanupBounds = BoundsInForm(Find(form, "CleanupGroup"), form);
                 Assert(!resultBounds.IntersectsWith(cleanupBounds), prefix + "results and cleanup must not overlap; results=" + resultBounds + ", cleanup=" + cleanupBounds);
+                Assert(ButtonTextFits((Button)Find(form, "ThemeButton"), 12), prefix + "theme button text must fit");
                 Assert(ButtonTextFits((Button)Find(form, "LanguageButton"), 12), prefix + "language button text must fit");
                 Assert(ButtonTextFits((Button)Find(form, "OldBrowseButton"), 12), prefix + "OLD Browse text must fit");
                 Assert(ButtonTextFits((Button)Find(form, "CurrentBrowseButton"), 12), prefix + "CURRENT Browse text must fit");
@@ -399,21 +502,38 @@ namespace LegacySift.Tests
                 Assert(LabelTextFits((Label)Find(form, "CleanupExplanation")), prefix + "cleanup explanation must fit");
                 Assert(LabelTextFits((Label)Find(form, "ProtectedReminder")), prefix + "protected reminder must fit");
                 Assert(Find(form, "HelpText").Text.Length > 300, prefix + "guide and safety text must be present");
+                Assert(form.Icon != null, prefix + "window and taskbar icon must be assigned");
+
+                var palette = ThemeManager.CurrentPalette;
+                Assert(Find(form, "WorkPage").BackColor == palette.AppBackground, prefix + "work page must use the active application surface");
+                Assert(Find(form, "OldPanel").BackColor == palette.OldSurface, prefix + "OLD panel must use the active semantic surface");
+                Assert(Find(form, "CurrentPanel").BackColor == palette.CurrentSurface, prefix + "CURRENT panel must use the active semantic surface");
+                Assert(Find(form, "MainTabs") is ThemedTabControl, prefix + "main navigation must use the focus-aware themed tab control");
+                Assert(Find(form, "ResultsTabs") is ThemedTabControl, prefix + "result navigation must use the focus-aware themed tab control");
+                Assert(TabTextFits((TabControl)Find(form, "MainTabs")), prefix + "main tab labels must remain fully visible");
+                Assert(TabTextFits((TabControl)Find(form, "ResultsTabs")), prefix + "result tab labels must remain fully visible");
+
+                foreach (var buttonName in new[] { "ThemeButton", "LanguageButton", "OldBrowseButton", "CurrentBrowseButton", "AnalyzeButton", "CleanupButton", "RestoreButton" })
+                {
+                    var button = (Button)Find(form, buttonName);
+                    Assert(button.FlatStyle == FlatStyle.Flat && button.FlatAppearance.BorderSize == 1, prefix + buttonName + " must preserve a visible non-color boundary");
+                    Assert(button.TabStop, prefix + buttonName + " must remain keyboard-focusable");
+                }
 
                 if (state == LayoutTestState.AnalysisCompleted && configuration.Name == "1366x768@100")
                 {
                     var grid = (DataGridView)Find(form, "UniqueGrid");
-                    var usefulMinimum = grid.ColumnHeadersHeight + grid.RowTemplate.Height * 3;
+                    var usefulMinimum = grid.ColumnHeadersHeight + grid.RowTemplate.Height * 4;
                     if (info.Language == AppLanguage.English)
                     {
                         var allocationNames = new[] { "IntroLabel", "FolderPair", "CheckArea", "SummaryPanel", "ResultsTabs", "CleanupGroup" };
-                        Console.WriteLine("LAYOUT_ALLOCATION " + string.Join(" ", allocationNames.Select(name => name + "=" + BoundsInForm(Find(form, name), form))));
+                        Console.WriteLine("LAYOUT_ALLOCATION theme=" + theme + " " + string.Join(" ", allocationNames.Select(name => name + "=" + BoundsInForm(Find(form, name), form))));
                     }
                     Assert(grid.Rows.Count >= 4, prefix + "test data must expose at least four actual result rows");
-                    Assert(grid.ClientSize.Height >= usefulMinimum, prefix + "result grid must show its header and at least three data rows; height=" + grid.ClientSize.Height + ", minimum=" + usefulMinimum);
-                    Assert(grid.DisplayedRowCount(false) >= 3, prefix + "at least three result rows must be visibly displayed");
+                    Assert(grid.ClientSize.Height >= usefulMinimum, prefix + "result grid must show its header and at least four data rows; height=" + grid.ClientSize.Height + ", minimum=" + usefulMinimum);
+                    Assert(grid.DisplayedRowCount(false) >= 4, prefix + "at least four result rows must be visibly displayed");
                     if (info.Language == AppLanguage.English)
-                        Console.WriteLine("LAYOUT_METRIC constrained-grid-height=" + grid.ClientSize.Height + " displayed-rows=" + grid.DisplayedRowCount(false) + " cleanup-height=" + Find(form, "CleanupGroup").Height);
+                        Console.WriteLine("LAYOUT_METRIC theme=" + theme + " constrained-grid-height=" + grid.ClientSize.Height + " displayed-rows=" + grid.DisplayedRowCount(false) + " cleanup-height=" + Find(form, "CleanupGroup").Height);
                 }
 
                 if (state == LayoutTestState.OtherOptionsExpanded)
@@ -427,59 +547,138 @@ namespace LegacySift.Tests
 
         private static void TestLanguageDialogLayout()
         {
-            foreach (var current in LanguageCatalog.All)
+            foreach (var theme in new[] { ThemeMode.Light, ThemeMode.Dark })
             {
-                using (var dialog = new LanguageDialog(current.Language))
+                ThemeManager.SetMode(theme);
+                foreach (var current in LanguageCatalog.All)
                 {
-                    dialog.CreateControl();
-                    dialog.Show();
-                    Application.DoEvents();
-                    dialog.PerformLayout();
-                    var choices = dialog.Controls.Find("LanguageList", true)[0].Controls.OfType<RadioButton>().ToList();
-                    Assert(choices.Count == 34, current.Code + " language dialog must contain 34 choices");
-                    foreach (var choice in choices)
+                    L10n.SetLanguage(current.Language);
+                    using (var dialog = new LanguageDialog(current.Language))
                     {
-                        Assert(choice.Width > 250 && choice.Height >= 30, current.Code + " language choice must have usable bounds: " + choice.Name);
-                        var measured = TextRenderer.MeasureText(choice.Text, choice.Font).Width + 55;
-                        Assert(measured <= choice.ClientSize.Width + 8, current.Code + " language choice text must fit: " + choice.Name);
+                        var prefix = theme + " " + current.Code + ": ";
+                        dialog.CreateControl();
+                        dialog.Show();
+                        Application.DoEvents();
+                        ThemeManager.ApplyTo(dialog);
+                        dialog.PerformLayout();
+                        var choices = dialog.Controls.Find("LanguageList", true)[0].Controls.OfType<RadioButton>().ToList();
+                        Assert(choices.Count == 34, prefix + "language dialog must contain 34 choices");
+                        foreach (var choice in choices)
+                        {
+                            Assert(choice.Width > 250 && choice.Height >= 30, prefix + "language choice must have usable bounds: " + choice.Name);
+                            var measured = TextRenderer.MeasureText(choice.Text, choice.Font).Width + 55;
+                            Assert(measured <= choice.ClientSize.Width + 8, prefix + "language choice text must fit: " + choice.Name);
+                        }
+                        Assert(choices.Any(x => x.Name == "LanguageChoice_IT"), prefix + "dialog must always expose Italian");
+                        Assert(choices.Any(x => x.Name == "LanguageChoice_EN"), prefix + "dialog must always expose English");
+                        Assert(choices[0].Name == "LanguageChoice_EN" && choices[1].Name == "LanguageChoice_IT", prefix + "dialog must keep recovery languages first");
+                        Assert(dialog.Icon != null, prefix + "language dialog must use the application icon");
+                        Assert(dialog.BackColor == ThemeManager.CurrentPalette.AppBackground, prefix + "language dialog must use the active theme");
+                        var scroll = (ScrollableControl)dialog.Controls.Find("LanguageScroll", true)[0];
+                        var last = choices.Last();
+                        scroll.ScrollControlIntoView(last);
+                        Application.DoEvents();
+                        Assert(last.Bottom + scroll.AutoScrollPosition.Y <= scroll.ClientSize.Height + 8, prefix + "final language entry must be reachable by scrolling");
                     }
-                    Assert(choices.Any(x => x.Name == "LanguageChoice_IT"), current.Code + " dialog must always expose Italian");
-                    Assert(choices.Any(x => x.Name == "LanguageChoice_EN"), current.Code + " dialog must always expose English");
-                    Assert(choices[0].Name == "LanguageChoice_EN" && choices[1].Name == "LanguageChoice_IT", current.Code + " dialog must keep recovery languages first");
-                    var scroll = (ScrollableControl)dialog.Controls.Find("LanguageScroll", true)[0];
-                    var last = choices.Last();
-                    scroll.ScrollControlIntoView(last);
-                    Application.DoEvents();
-                    Assert(last.Bottom + scroll.AutoScrollPosition.Y <= scroll.ClientSize.Height + 8, current.Code + " final language entry must be reachable by scrolling");
                 }
             }
+            ThemeManager.SetMode(ThemeMode.System);
+            L10n.SetLanguage(AppLanguage.English);
+        }
+
+        private static void TestThemeDialogLayout()
+        {
+            foreach (var theme in new[] { ThemeMode.Light, ThemeMode.Dark })
+            {
+                ThemeManager.SetMode(theme);
+                foreach (var current in LanguageCatalog.All)
+                {
+                    L10n.SetLanguage(current.Language);
+                    using (var dialog = new ThemeDialog(theme))
+                    {
+                        var prefix = theme + " " + current.Code + ": ";
+                        dialog.Show();
+                        Application.DoEvents();
+                        ThemeManager.ApplyTo(dialog);
+                        dialog.PerformLayout();
+                        var choices = new[] { "ThemeSystem", "ThemeLight", "ThemeDark" }.Select(name => (RadioButton)Find(dialog, name)).ToArray();
+                        Assert(choices.All(x => x != null), prefix + "theme dialog must contain all three choices");
+                        Assert(choices.All(x => !string.IsNullOrWhiteSpace(x.Text)), prefix + "theme choices must be localized");
+                        Assert(choices.All(x => TextRenderer.MeasureText(x.Text, x.Font).Width + 45 <= x.ClientSize.Width + 8), prefix + "theme choice text must fit");
+                        Assert(choices.Count(x => x.Checked) == 1, prefix + "exactly one theme choice must be selected");
+                        Assert(dialog.SelectedMode == theme, prefix + "current explicit theme must be selected");
+                        Assert(dialog.Icon != null, prefix + "theme dialog must use the application icon");
+                        Assert(dialog.BackColor == ThemeManager.CurrentPalette.AppBackground, prefix + "theme dialog must use the active theme");
+                        foreach (var name in new[] { "ThemeHeading", "ThemeSystem", "ThemeLight", "ThemeDark", "ThemeOk", "ThemeCancel" })
+                            Assert(IsInsideForm(dialog, Find(dialog, name), 2), prefix + name + " must stay inside the dialog");
+                    }
+                }
+            }
+            ThemeManager.SetMode(ThemeMode.System);
+            L10n.SetLanguage(AppLanguage.English);
         }
 
         private static void CaptureRepresentativeLayouts(string outputDirectory)
         {
             Directory.CreateDirectory(outputDirectory);
-            var languages = new[]
+            CaptureThemeLayouts(outputDirectory, ThemeMode.Light, new[]
             {
                 AppLanguage.Italian, AppLanguage.German, AppLanguage.Ukrainian,
                 AppLanguage.ChineseSimplified, AppLanguage.Hindi, AppLanguage.Korean,
                 AppLanguage.Bengali, AppLanguage.Thai, AppLanguage.Lithuanian
-            };
-            foreach (var language in languages)
+            });
+            CaptureThemeLayouts(outputDirectory, ThemeMode.Dark, new[]
             {
-                L10n.SetLanguage(language);
-                using (var form = new MainForm())
+                AppLanguage.Italian, AppLanguage.German, AppLanguage.ChineseSimplified,
+                AppLanguage.Hindi, AppLanguage.Korean
+            });
+
+            foreach (var theme in new[] { ThemeMode.Light, ThemeMode.Dark })
+                CaptureLayout(outputDirectory, theme, AppLanguage.Italian, LayoutTestState.Initial);
+
+            ThemeManager.SetMode(ThemeMode.System);
+            L10n.SetLanguage(AppLanguage.English);
+        }
+
+        private static void CaptureThemeLayouts(string outputDirectory, ThemeMode theme, IEnumerable<AppLanguage> languages)
+        {
+            foreach (var language in languages)
+                CaptureLayout(outputDirectory, theme, language, LayoutTestState.AnalysisCompleted);
+        }
+
+        private static void CaptureLayout(string outputDirectory, ThemeMode theme, AppLanguage language, LayoutTestState state)
+        {
+            ThemeManager.SetMode(theme);
+            L10n.SetLanguage(language);
+            using (var form = new MainForm())
+            {
+                form.PrepareLayoutTest(state, new Size(1144, 673), 1F);
+                using (var image = form.CaptureLayoutTestImage())
                 {
-                    form.PrepareLayoutTest(LayoutTestState.AnalysisCompleted, new Size(1144, 673), 1F);
-                    using (var image = form.CaptureLayoutTestImage())
-                        image.Save(Path.Combine(outputDirectory, L10n.ToCode(language).Replace("-", "_") + "-1366x768-100.png"), ImageFormat.Png);
+                    var fileName = theme.ToString().ToLowerInvariant() + "-" + L10n.ToCode(language).Replace("-", "_") + "-" +
+                                   state.ToString().ToLowerInvariant() + "-1366x768-100.png";
+                    image.Save(Path.Combine(outputDirectory, fileName), ImageFormat.Png);
                 }
             }
-            L10n.SetLanguage(AppLanguage.English);
         }
 
         private static Control Find(Control root, string name)
         {
             return root.Controls.Find(name, true).FirstOrDefault();
+        }
+
+        private static string FindRepositoryFile(string relativePath)
+        {
+            foreach (var start in new[] { Directory.GetCurrentDirectory(), AppDomain.CurrentDomain.BaseDirectory })
+            {
+                var directory = new DirectoryInfo(start);
+                for (var depth = 0; directory != null && depth < 10; depth++, directory = directory.Parent)
+                {
+                    var candidate = Path.Combine(directory.FullName, relativePath);
+                    if (File.Exists(candidate)) return candidate;
+                }
+            }
+            throw new FileNotFoundException("Could not locate repository file", relativePath);
         }
 
         private static bool IsInsideForm(Form form, Control control, int tolerance)
@@ -513,6 +712,17 @@ namespace LegacySift.Tests
             var proposed = new Size(System.Math.Max(1, label.ClientSize.Width), int.MaxValue);
             var measured = TextRenderer.MeasureText(label.Text ?? string.Empty, label.Font, proposed, TextFormatFlags.WordBreak);
             return measured.Height <= label.ClientSize.Height + 8;
+        }
+
+        private static bool TabTextFits(TabControl tabs)
+        {
+            for (var index = 0; index < tabs.TabPages.Count; index++)
+            {
+                var bounds = tabs.GetTabRect(index);
+                var measured = TextRenderer.MeasureText(tabs.TabPages[index].Text ?? string.Empty, tabs.Font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine).Width;
+                if (bounds.Right > tabs.ClientSize.Width + 2 || measured > bounds.Width - 12 + 8) return false;
+            }
+            return true;
         }
 
         private sealed class LayoutConfiguration

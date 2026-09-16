@@ -9,6 +9,7 @@ namespace LegacySift
     {
         Initial,
         FoldersSelected,
+        AnalysisRunning,
         AnalysisCompleted,
         CleanupReady,
         CleanupConfirmed,
@@ -45,6 +46,14 @@ namespace LegacySift
             {
                 _sourceBox.Text = @"C:\Recovered backup\Documents and family archive";
                 _referenceBox.Text = @"D:\Current protected files\Documents";
+            }
+
+            if (state == LayoutTestState.AnalysisRunning)
+            {
+                _summaryLabel.Text = L10n.T("CheckingNow");
+                _cleanupExplanationLabel.Text = L10n.T("CleanupWaitForAnalysis");
+                _statusLabel.Text = L10n.T("PhaseCompare");
+                SetBusy(true);
             }
 
             if ((int)state >= (int)LayoutTestState.AnalysisCompleted)

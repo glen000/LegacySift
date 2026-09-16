@@ -23,6 +23,7 @@ namespace LegacySift
         private Button _reportButton;
         private Button _restoreButton;
         private Button _languageButton;
+        private Button _themeButton;
         private RadioButton _quarantineRadio;
         private RadioButton _recycleRadio;
         private CheckBox _removeEmptyCheck;
@@ -49,6 +50,7 @@ namespace LegacySift
         public MainForm()
         {
             Text = L10n.T("AppTitle");
+            Icon = AppIcon.CreateIcon();
             StartPosition = FormStartPosition.CenterScreen;
             Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             AutoScaleDimensions = new SizeF(96F, 96F);
@@ -56,8 +58,10 @@ namespace LegacySift
             MinimumSize = new Size(860, 620);
             Size = new Size(1160, 740);
             BuildUi();
+            ThemeManager.ApplyTo(this);
             Shown += (s, e) =>
             {
+                ThemeManager.ApplyTo(this);
                 if (!_layoutTestMode) FitDefaultWindowToWorkingArea();
             };
         }
@@ -91,20 +95,52 @@ namespace LegacySift
                 Name = "HeaderLayout",
                 Dock = DockStyle.Fill,
                 AutoSize = true,
-                ColumnCount = 2,
+                ColumnCount = 3,
                 Padding = new Padding(12, 5, 12, 4),
                 BackColor = SystemColors.ControlLightLight
             };
             header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
+            var brand = new FlowLayoutPanel
+            {
+                Name = "HeaderBrand",
+                AutoSize = true,
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                Margin = new Padding(0),
+                Padding = new Padding(0)
+            };
+            var mark = new PictureBox
+            {
+                Name = "HeaderMark",
+                Image = AppIcon.CreateBitmap(24),
+                Size = new Size(24, 24),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                Margin = new Padding(0, 1, 7, 0)
+            };
             var title = new Label
             {
                 Name = "AppHeading",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                Text = "LegacySift"
+                Text = "LegacySift",
+                Margin = new Padding(0)
             };
+            brand.Controls.Add(mark);
+            brand.Controls.Add(title);
+            Disposed += (s, e) => mark.Image?.Dispose();
+
+            _themeButton = new Button
+            {
+                Name = "ThemeButton",
+                Text = L10n.T("ThemeButton"),
+                AutoSize = true,
+                Margin = new Padding(10, 3, 0, 0)
+            };
+            _themeButton.Click += ChangeTheme;
             _languageButton = new Button
             {
                 Name = "LanguageButton",
@@ -113,11 +149,12 @@ namespace LegacySift
                 Margin = new Padding(10, 3, 0, 0)
             };
             _languageButton.Click += ChangeLanguage;
-            header.Controls.Add(title, 0, 0);
-            header.Controls.Add(_languageButton, 1, 0);
+            header.Controls.Add(brand, 0, 0);
+            header.Controls.Add(_themeButton, 1, 0);
+            header.Controls.Add(_languageButton, 2, 0);
             root.Controls.Add(header, 0, 0);
 
-            var mainTabs = new TabControl { Name = "MainTabs", Dock = DockStyle.Fill };
+            var mainTabs = new ThemedTabControl { Name = "MainTabs", Dock = DockStyle.Fill };
             var workPage = new TabPage(L10n.T("TabWork")) { Name = "WorkPage" };
             var helpPage = new TabPage(L10n.T("TabHelp")) { Name = "HelpPage" };
             mainTabs.TabPages.Add(workPage);
@@ -290,7 +327,7 @@ namespace LegacySift
             summaryPanel.Controls.Add(_summaryLabel);
             outer.Controls.Add(summaryPanel, 0, 3);
 
-            _resultsTabs = new TabControl
+            _resultsTabs = new ThemedTabControl
             {
                 Name = "ResultsTabs",
                 Dock = DockStyle.Fill,
@@ -512,6 +549,7 @@ namespace LegacySift
             header.Controls.Add(new Label { AutoSize = true, Font = new Font(Font.FontFamily, 10.5F, FontStyle.Bold), Text = title, Margin = new Padding(0, 2, 9, 2) });
             header.Controls.Add(new Label
             {
+                Name = "FolderBadge",
                 AutoSize = true,
                 Font = new Font(Font.FontFamily, 7.8F, FontStyle.Bold),
                 ForeColor = Color.White,
@@ -575,6 +613,7 @@ namespace LegacySift
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             layout.Controls.Add(new Label
             {
+                Name = "ResultExplanation",
                 AutoSize = true,
                 Dock = DockStyle.Fill,
                 Text = explanation,
@@ -611,6 +650,17 @@ namespace LegacySift
                 if (MessageBox.Show(this, L10n.T("LanguageRestart"), L10n.T("LanguageRestartTitle"), MessageBoxButtons.OKCancel, MessageBoxIcon.Information) != DialogResult.OK) return;
                 SettingsStore.SaveLanguage(dialog.SelectedLanguage);
                 Application.Restart();
+            }
+        }
+
+        private void ChangeTheme(object sender, EventArgs e)
+        {
+            using (var dialog = new ThemeDialog(ThemeManager.CurrentMode))
+            {
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                ThemeManager.SetMode(dialog.SelectedMode);
+                SettingsStore.SaveTheme(dialog.SelectedMode);
+                ThemeManager.ApplyTo(this);
             }
         }
 
@@ -898,6 +948,7 @@ namespace LegacySift
             _reportButton.Enabled = !busy && !string.IsNullOrEmpty(_lastReportPath) && File.Exists(_lastReportPath);
             _restoreButton.Enabled = !busy;
             _languageButton.Enabled = !busy;
+            _themeButton.Enabled = !busy;
             if (_confirmCheck != null) _confirmCheck.Enabled = !busy && _analysis != null && _analysis.ExactDuplicateCount > 0;
             UpdateCleanupEnabled();
             if (busy)

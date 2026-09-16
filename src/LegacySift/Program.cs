@@ -9,6 +9,7 @@ namespace LegacySift
         private static void Main()
         {
             L10n.SetLanguage(SettingsStore.LoadLanguage());
+            ThemeManager.SetMode(SettingsStore.LoadTheme());
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
