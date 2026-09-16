@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -22,6 +23,16 @@ namespace LegacySift
             BackColor = _palette.AppBackground;
             ForeColor = _palette.Text;
             Invalidate();
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+            // Owner-drawn native tabs cache their header widths. Recreate the
+            // handle after a DPI/font change so translated labels are measured
+            // again instead of being drawn into their previous 96-DPI bounds.
+            if (IsHandleCreated && !Disposing && !IsDisposed)
+                RecreateHandle();
         }
 
         protected override void OnDrawItem(DrawItemEventArgs e)

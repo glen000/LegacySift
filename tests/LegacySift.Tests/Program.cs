@@ -510,8 +510,10 @@ namespace LegacySift.Tests
                 Assert(Find(form, "CurrentPanel").BackColor == palette.CurrentSurface, prefix + "CURRENT panel must use the active semantic surface");
                 Assert(Find(form, "MainTabs") is ThemedTabControl, prefix + "main navigation must use the focus-aware themed tab control");
                 Assert(Find(form, "ResultsTabs") is ThemedTabControl, prefix + "result navigation must use the focus-aware themed tab control");
-                Assert(TabTextFits((TabControl)Find(form, "MainTabs")), prefix + "main tab labels must remain fully visible");
-                Assert(TabTextFits((TabControl)Find(form, "ResultsTabs")), prefix + "result tab labels must remain fully visible");
+                var mainTabs = (TabControl)Find(form, "MainTabs");
+                var resultsTabs = (TabControl)Find(form, "ResultsTabs");
+                Assert(TabTextFits(mainTabs), prefix + "main tab labels must remain fully visible; " + DescribeTabMetrics(mainTabs));
+                Assert(TabTextFits(resultsTabs), prefix + "result tab labels must remain fully visible; " + DescribeTabMetrics(resultsTabs));
 
                 foreach (var buttonName in new[] { "ThemeButton", "LanguageButton", "OldBrowseButton", "CurrentBrowseButton", "AnalyzeButton", "CleanupButton", "RestoreButton" })
                 {
@@ -723,6 +725,16 @@ namespace LegacySift.Tests
                 if (bounds.Right > tabs.ClientSize.Width + 2 || measured > bounds.Width - 12 + 8) return false;
             }
             return true;
+        }
+
+        private static string DescribeTabMetrics(TabControl tabs)
+        {
+            return string.Join(", ", tabs.TabPages.Cast<TabPage>().Select((page, index) =>
+            {
+                var bounds = tabs.GetTabRect(index);
+                var measured = TextRenderer.MeasureText(page.Text ?? string.Empty, tabs.Font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine).Width;
+                return page.Text + " measured=" + measured + " bounds=" + bounds;
+            }));
         }
 
         private sealed class LayoutConfiguration
