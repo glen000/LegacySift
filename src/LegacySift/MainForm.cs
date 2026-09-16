@@ -313,7 +313,7 @@ namespace LegacySift
                 Height = 42,
                 BackColor = Color.FromArgb(245, 247, 250),
                 Padding = new Padding(7, 4, 7, 4),
-                Margin = new Padding(0, 1, 0, 3)
+                Margin = new Padding(0)
             };
             _summaryLabel = new Label
             {
