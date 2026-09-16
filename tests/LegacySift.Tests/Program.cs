@@ -532,6 +532,13 @@ namespace LegacySift.Tests
                         Console.WriteLine("LAYOUT_ALLOCATION theme=" + theme + " " + string.Join(" ", allocationNames.Select(name => name + "=" + BoundsInForm(Find(form, name), form))));
                     }
                     Assert(grid.Rows.Count >= 4, prefix + "test data must expose at least four actual result rows");
+                    if (grid.ClientSize.Height < usefulMinimum)
+                    {
+                        Console.WriteLine("LAYOUT_SHORT " + prefix +
+                                          " results=" + resultBounds +
+                                          " explanation=" + BoundsInForm(Find(form, "ResultExplanation"), form) +
+                                          " tabs=" + DescribeTabMetrics((TabControl)Find(form, "ResultsTabs")));
+                    }
                     Assert(grid.ClientSize.Height >= usefulMinimum, prefix + "result grid must show its header and at least four data rows; height=" + grid.ClientSize.Height + ", minimum=" + usefulMinimum);
                     Assert(grid.DisplayedRowCount(false) >= 4, prefix + "at least four result rows must be visibly displayed");
                     if (info.Language == AppLanguage.English)

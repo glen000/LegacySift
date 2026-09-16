@@ -333,7 +333,8 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 MinimumSize = new Size(0, 80),
                 Margin = new Padding(0),
-                Multiline = true
+                Multiline = true,
+                SizeMode = TabSizeMode.FillToRight
             };
             _uniqueGrid = CreateGrid();
             _versionGrid = CreateGrid();
