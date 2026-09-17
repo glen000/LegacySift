@@ -228,11 +228,15 @@ namespace LegacySift
             else if (control is CheckBox)
             {
                 ((CheckBox)control).UseVisualStyleBackColor = false;
+                var themedCheck = control as ThemedCheckBox;
+                if (themedCheck != null) themedCheck.SetPalette(palette);
             }
             else if (control is ProgressBar)
             {
                 control.BackColor = palette.Border;
                 control.ForeColor = palette.Primary;
+                var themedProgress = control as ThemedProgressBar;
+                if (themedProgress != null) themedProgress.SetPalette(palette);
             }
 
             foreach (Control child in control.Controls)
@@ -251,6 +255,8 @@ namespace LegacySift
             button.ForeColor = primary ? Color.White : palette.Text;
             button.FlatAppearance.MouseOverBackColor = primary ? palette.PrimaryHover : palette.SecondarySurface;
             button.FlatAppearance.MouseDownBackColor = primary ? palette.PrimaryPressed : palette.Border;
+            var themedButton = button as ThemedButton;
+            if (themedButton != null) themedButton.SetPalette(palette);
         }
 
         private static void ApplyLabel(Label label, ThemePalette palette, Color background)

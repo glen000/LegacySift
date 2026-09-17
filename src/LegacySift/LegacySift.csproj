@@ -42,6 +42,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="AppIcon.cs" />
     <Compile Include="ThemeManager.cs" />
+    <Compile Include="ThemedControls.cs" />
     <Compile Include="ThemedTabControl.cs" />
     <Compile Include="ThemeDialog.cs" />
     <Compile Include="Localization.cs" />
@@ -90,7 +91,7 @@
     <EmbeddedResource Include="Assets\legacysift-icon.ico">
       <LogicalName>LegacySift.Assets.legacysift-icon.ico</LogicalName>
     </EmbeddedResource>
-    <None Include="Assets\legacysift-icon.svg" />
+    <None Include="Assets\legacysift-icon-source.png" />
     <None Include="App.config" />
     <None Include="app.manifest" />
   </ItemGroup>

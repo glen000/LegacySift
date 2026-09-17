@@ -272,6 +272,8 @@ namespace LegacySift.Tests
             Assert(ContrastRatio(dark.SecondaryText, dark.Surface) >= 4.5, "dark secondary text must meet WCAG AA contrast on cards");
             Assert(ContrastRatio(light.SelectionText, light.Selection) >= 4.5, "light selected grid text must meet WCAG AA contrast");
             Assert(ContrastRatio(dark.SelectionText, dark.Selection) >= 4.5, "dark selected grid text must meet WCAG AA contrast");
+            Assert(ContrastRatio(light.DisabledText, light.SecondarySurface) >= 3.0, "light disabled text must remain distinguishable");
+            Assert(ContrastRatio(dark.DisabledText, dark.SecondarySurface) >= 3.0, "dark disabled text must remain distinguishable");
         }
 
         private static double ContrastRatio(Color foreground, Color background)
@@ -325,9 +327,25 @@ namespace LegacySift.Tests
             foreach (var expected in new[] { 16, 24, 32, 48, 64, 128, 256 })
                 Assert(sizes.Contains(expected), "application ICO must include a " + expected + "px frame");
 
+            var sourcePath = FindRepositoryFile(Path.Combine("src", "LegacySift", "Assets", "legacysift-icon-source.png"));
+            var documentedSourcePath = FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-icon-source.png"));
+            using (var source = Image.FromFile(sourcePath))
+            {
+                Assert(source.Width == 1254 && source.Height == 1254, "official icon source must preserve its supplied 1254px canvas");
+                Assert(source.RawFormat.Guid == ImageFormat.Png.Guid, "official icon source must remain PNG");
+            }
+            Assert(BytesEqual(File.ReadAllBytes(sourcePath), File.ReadAllBytes(documentedSourcePath)), "project and documentation icon sources must be byte-identical");
+            foreach (var expected in new[] { 16, 24, 32, 48, 64, 128, 256 })
+            {
+                var pngPath = FindRepositoryFile(Path.Combine("docs", "assets", "icon-sizes", "legacysift-icon-" + expected + ".png"));
+                using (var image = Image.FromFile(pngPath))
+                    Assert(image.Width == expected && image.Height == expected, "documentation icon must preserve the " + expected + "px size");
+            }
+
             Assert(File.Exists(FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-icon-qa.png"))), "actual-size icon QA contact sheet must be checked in");
             Assert(File.Exists(FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-logo-light.png"))), "cropped full logo asset must be checked in");
-            Assert(File.Exists(FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-mark.svg"))), "vector brand mark must be checked in");
+            Assert(!File.Exists(Path.Combine(Path.GetDirectoryName(sourcePath), "legacysift-icon.svg")), "retired application icon SVG must be absent");
+            Assert(!File.Exists(Path.Combine(Path.GetDirectoryName(documentedSourcePath), "legacysift-mark.svg")), "retired alternate icon mark must be absent");
         }
 
         private static void TestScriptCoverage()
@@ -476,7 +494,7 @@ namespace LegacySift.Tests
                 var required = new[]
                 {
                     "HeaderMark", "ThemeButton", "LanguageButton", "MainTabs", "WorkPage", "OldPanel", "CurrentPanel", "OldBrowseButton",
-                    "CurrentBrowseButton", "AnalyzeButton", "ResultsTabs", "CleanupGroup", "CleanupExplanation", "SafetyFolderRadio",
+                    "CurrentBrowseButton", "AnalyzeButton", "CancelButton", "ReportButton", "ProgressBar", "ResultsTabs", "CleanupGroup", "CleanupExplanation", "SafetyFolderRadio",
                     "ConfirmCheck", "CleanupButton", "RestoreButton", "ProtectedReminder", "SummaryLabel", "HelpText"
                 };
                 foreach (var name in required)
@@ -510,6 +528,10 @@ namespace LegacySift.Tests
                 Assert(Find(form, "CurrentPanel").BackColor == palette.CurrentSurface, prefix + "CURRENT panel must use the active semantic surface");
                 Assert(Find(form, "MainTabs") is ThemedTabControl, prefix + "main navigation must use the focus-aware themed tab control");
                 Assert(Find(form, "ResultsTabs") is ThemedTabControl, prefix + "result navigation must use the focus-aware themed tab control");
+                foreach (var buttonName in new[] { "ThemeButton", "LanguageButton", "OldBrowseButton", "CurrentBrowseButton", "AnalyzeButton", "CancelButton", "ReportButton", "CleanupButton", "RestoreButton" })
+                    Assert(Find(form, buttonName) is ThemedButton, prefix + buttonName + " must use theme-aware disabled rendering");
+                Assert(Find(form, "ConfirmCheck") is ThemedCheckBox, prefix + "confirmation must use theme-aware disabled rendering");
+                Assert(Find(form, "ProgressBar") is ThemedProgressBar, prefix + "progress must use the active palette");
                 var mainTabs = (TabControl)Find(form, "MainTabs");
                 var resultsTabs = (TabControl)Find(form, "ResultsTabs");
                 Assert(TabTextFits(mainTabs), prefix + "main tab labels must remain fully visible; " + DescribeTabMetrics(mainTabs));
@@ -645,7 +667,10 @@ namespace LegacySift.Tests
             });
 
             foreach (var theme in new[] { ThemeMode.Light, ThemeMode.Dark })
+            {
                 CaptureLayout(outputDirectory, theme, AppLanguage.Italian, LayoutTestState.Initial);
+                CaptureLayout(outputDirectory, theme, AppLanguage.Italian, LayoutTestState.AnalysisRunning);
+            }
 
             ThemeManager.SetMode(ThemeMode.System);
             L10n.SetLanguage(AppLanguage.English);

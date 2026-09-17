@@ -50,7 +50,7 @@ jobs:
           try { Write-Host "Packaged EXE icon: $($exeIcon.Width)x$($exeIcon.Height)" }
           finally { $exeIcon.Dispose() }
           $screenshots = @(Get-ChildItem layout-screenshots\*.png | Sort-Object Name)
-          if ($screenshots.Count -lt 16) { throw "Expected at least 16 theme/language screenshots; found $($screenshots.Count)." }
+          if ($screenshots.Count -lt 18) { throw "Expected at least 18 theme/language screenshots; found $($screenshots.Count)." }
           $screenshots | ForEach-Object {
             $image = [System.Drawing.Image]::FromFile($_.FullName)
             try { Write-Host "Layout screenshot: $($_.Name) $($image.Width)x$($image.Height) ($($_.Length) bytes)" }
@@ -69,6 +69,6 @@ jobs:
             LegacySift-windows.zip.sha256
             layout-screenshots\*.png
             docs\assets\legacysift-icon-qa.png
+            docs\assets\legacysift-icon-source.png
             docs\assets\legacysift-logo-light.png
-            docs\assets\legacysift-mark.svg
             docs\assets\icon-sizes\*.png

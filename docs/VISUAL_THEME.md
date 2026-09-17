@@ -8,13 +8,13 @@ LegacySift 0.2.3-alpha applies a restrained visual layer to the existing safety 
 
 - Full supplied artwork: `docs/assets/legacysift-logo-original.png`
 - Cropped light-background logo: `docs/assets/legacysift-logo-light.png`
-- Simplified vector mark: `docs/assets/legacysift-mark.svg`
-- Icon master: `src/LegacySift/Assets/legacysift-icon.svg`
+- Official application-icon source: `src/LegacySift/Assets/legacysift-icon-source.png`
+- Documentation copy of the same source: `docs/assets/legacysift-icon-source.png`
 - Multi-resolution Windows icon: `src/LegacySift/Assets/legacysift-icon.ico`
 - 256 px documentation icon: `docs/assets/legacysift-icon-256.png`
 - Actual-size icon QA sheet: `docs/assets/legacysift-icon-qa.png`
 
-The supplied full logo contains a baked white background and soft edge treatment. It is preserved rather than subjected to an unreliable automatic transparency conversion. The application icon is a separate clean vector simplification with no text or small decorative rays.
+The supplied full wordmark remains unchanged. The separately supplied 1254×1254 application icon is the sole icon source of truth: its composition, proportions and colors are preserved, with only high-quality resizing for the 16/24/32/48/64/128/256 px PNG and ICO frames. Earlier alternate vector icon marks have been removed.
 
 ## Theme behavior
 

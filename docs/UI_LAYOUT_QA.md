@@ -33,6 +33,7 @@ The 125% and 150% cases are explicit programmatic scaling/font-pressure approxim
 
 - Light populated: Italian, German, Ukrainian, Simplified Chinese, Hindi, Korean, Bengali, Thai and Lithuanian;
 - Dark populated: Italian, German, Simplified Chinese, Hindi and Korean;
-- Light and Dark initial-state Italian views.
+- Light and Dark initial-state Italian views;
+- Light and Dark Italian analysis-in-progress views, including the active progress bar and disabled actions.
 
 Final physical DPI, native title-bar behavior and native-speaker glyph/wording appearance should be spot-checked on Windows before a stable release.

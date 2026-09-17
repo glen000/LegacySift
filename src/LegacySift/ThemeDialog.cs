@@ -73,8 +73,8 @@ namespace LegacySift
                 AutoSize = true,
                 Margin = new Padding(0, 14, 0, 0)
             };
-            var ok = new Button { Name = "ThemeOk", Text = "OK", DialogResult = DialogResult.OK, AutoSize = true, MinimumSize = new Size(90, 32) };
-            var cancel = new Button { Name = "ThemeCancel", Text = L10n.T("Cancel"), DialogResult = DialogResult.Cancel, AutoSize = true, MinimumSize = new Size(100, 32) };
+            var ok = new ThemedButton { Name = "ThemeOk", Text = "OK", DialogResult = DialogResult.OK, AutoSize = true, MinimumSize = new Size(90, 32) };
+            var cancel = new ThemedButton { Name = "ThemeCancel", Text = L10n.T("Cancel"), DialogResult = DialogResult.Cancel, AutoSize = true, MinimumSize = new Size(100, 32) };
             buttons.Controls.Add(ok);
             buttons.Controls.Add(cancel);
             root.Controls.Add(buttons, 0, 4);

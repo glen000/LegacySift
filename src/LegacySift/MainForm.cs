@@ -133,7 +133,7 @@ namespace LegacySift
             brand.Controls.Add(title);
             Disposed += (s, e) => mark.Image?.Dispose();
 
-            _themeButton = new Button
+            _themeButton = new ThemedButton
             {
                 Name = "ThemeButton",
                 Text = L10n.T("ThemeButton"),
@@ -141,7 +141,7 @@ namespace LegacySift
                 Margin = new Padding(10, 2, 0, 0)
             };
             _themeButton.Click += ChangeTheme;
-            _languageButton = new Button
+            _languageButton = new ThemedButton
             {
                 Name = "LanguageButton",
                 Text = L10n.T("LanguageButton"),
@@ -277,7 +277,7 @@ namespace LegacySift
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
-            _analyzeButton = new Button
+            _analyzeButton = new ThemedButton
             {
                 Name = "AnalyzeButton",
                 Text = L10n.T("Analyze"),
@@ -287,9 +287,9 @@ namespace LegacySift
                 Padding = new Padding(8, 2, 8, 2)
             };
             _analyzeButton.Click += async (s, e) => await AnalyzeAsync();
-            _cancelButton = new Button { Name = "CancelButton", Text = L10n.T("Cancel"), AutoSize = true, MinimumSize = new Size(90, 34), Enabled = false };
+            _cancelButton = new ThemedButton { Name = "CancelButton", Text = L10n.T("Cancel"), AutoSize = true, MinimumSize = new Size(90, 34), Enabled = false };
             _cancelButton.Click += (s, e) => _cts?.Cancel();
-            _reportButton = new Button { Name = "ReportButton", Text = L10n.T("OpenReport"), AutoSize = true, MinimumSize = new Size(130, 34), Enabled = false };
+            _reportButton = new ThemedButton { Name = "ReportButton", Text = L10n.T("OpenReport"), AutoSize = true, MinimumSize = new Size(130, 34), Enabled = false };
             _reportButton.Click += (s, e) => OpenReport();
             actionBar.Controls.Add(_analyzeButton);
             actionBar.Controls.Add(_cancelButton);
@@ -298,7 +298,7 @@ namespace LegacySift
 
             var progressArea = new TableLayoutPanel { Name = "ProgressArea", Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 1, RowCount = 2, Margin = new Padding(0) };
             progressArea.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            _progress = new ProgressBar { Name = "ProgressBar", Dock = DockStyle.Fill, Height = 8, Style = ProgressBarStyle.Continuous, Margin = new Padding(0) };
+            _progress = new ThemedProgressBar { Name = "ProgressBar", Dock = DockStyle.Fill, Height = 8, Style = ProgressBarStyle.Continuous, Margin = new Padding(0) };
             _statusLabel = new Label { Name = "StatusLabel", AutoSize = true, Text = L10n.T("Ready"), ForeColor = SystemColors.GrayText, Margin = new Padding(0) };
             progressArea.Controls.Add(_progress, 0, 0);
             progressArea.Controls.Add(_statusLabel, 0, 1);
@@ -452,14 +452,14 @@ namespace LegacySift
                 if (_recycleRadio.Checked) _quarantineRadio.Checked = false;
                 else if (!_quarantineRadio.Checked) _quarantineRadio.Checked = true;
             };
-            _removeEmptyCheck = new CheckBox { Name = "RemoveEmptyCheck", Text = L10n.T("RemoveEmpty"), AutoSize = true, Checked = true, Margin = new Padding(6, 3, 3, 3) };
+            _removeEmptyCheck = new ThemedCheckBox { Name = "RemoveEmptyCheck", Text = L10n.T("RemoveEmpty"), AutoSize = true, Checked = true, Margin = new Padding(6, 3, 3, 3) };
             optionsFlow.Controls.Add(_recycleRadio);
             optionsFlow.Controls.Add(_removeEmptyCheck);
             _otherOptionsPanel.Controls.Add(optionsFlow);
             cleanupLayout.Controls.Add(modeRow, 0, 1);
             cleanupLayout.Controls.Add(_otherOptionsPanel, 0, 2);
 
-            _confirmCheck = new CheckBox
+            _confirmCheck = new ThemedCheckBox
             {
                 Name = "ConfirmCheck",
                 AutoSize = true,
@@ -490,7 +490,7 @@ namespace LegacySift
                 WrapContents = false,
                 Margin = new Padding(0)
             };
-            _cleanupButton = new Button
+            _cleanupButton = new ThemedButton
             {
                 Name = "CleanupButton",
                 Text = L10n.T("Cleanup"),
@@ -501,7 +501,7 @@ namespace LegacySift
                 Padding = new Padding(8, 2, 8, 2)
             };
             _cleanupButton.Click += async (s, e) => await CleanupAsync();
-            _restoreButton = new Button
+            _restoreButton = new ThemedButton
             {
                 Name = "RestoreButton",
                 Text = L10n.T("Restore"),
@@ -576,7 +576,7 @@ namespace LegacySift
             layout.SetColumnSpan(desc, 2);
 
             box = new TextBox { Name = "FolderPath", Dock = DockStyle.Fill, Margin = new Padding(0, 5, 7, 0) };
-            browseButton = new Button { Name = "BrowseButton", Text = L10n.T("Browse"), AutoSize = false, Dock = DockStyle.Fill, Margin = new Padding(4, 3, 0, 0), MinimumSize = new Size(86, 28) };
+            browseButton = new ThemedButton { Name = "BrowseButton", Text = L10n.T("Browse"), AutoSize = false, Dock = DockStyle.Fill, Margin = new Padding(4, 3, 0, 0), MinimumSize = new Size(86, 28) };
             browseButton.Click += browseHandler;
             layout.Controls.Add(box, 0, 2);
             layout.Controls.Add(browseButton, 1, 2);
