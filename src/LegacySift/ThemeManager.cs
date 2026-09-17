@@ -106,11 +106,9 @@ namespace LegacySift
         private const int DwmBorderColor = 34;
         private const int DwmCaptionColor = 35;
         private const int DwmTextColor = 36;
-        private const uint SwpNoSize = 0x0001;
-        private const uint SwpNoMove = 0x0002;
-        private const uint SwpNoZOrder = 0x0004;
-        private const uint SwpNoActivate = 0x0010;
-        private const uint SwpFrameChanged = 0x0020;
+        private const uint RdwInvalidate = 0x0001;
+        private const uint RdwUpdateNow = 0x0100;
+        private const uint RdwFrame = 0x0400;
 
         internal static int TitleBarApplyCount { get; private set; }
         internal static bool LastRequestedTitleBarDark { get; private set; }
@@ -363,10 +361,11 @@ namespace LegacySift
                     DwmSetWindowAttribute(form.Handle, DwmTextColor, ref systemDefault, sizeof(int));
                 }
 
-                // Refresh the native frame without recreating the form handle,
-                // preserving window state, taskbar identity and client layout.
-                SetWindowPos(form.Handle, IntPtr.Zero, 0, 0, 0, 0,
-                    SwpNoMove | SwpNoSize | SwpNoZOrder | SwpNoActivate | SwpFrameChanged);
+                // Repaint only the native frame. SWP_FRAMECHANGED deliberately
+                // triggers WM_NCCALCSIZE and can change ClientSize on a themed
+                // server session; RDW_FRAME refreshes the caption without that
+                // geometry recalculation or a form-handle recreation.
+                RedrawWindow(form.Handle, IntPtr.Zero, IntPtr.Zero, RdwInvalidate | RdwFrame | RdwUpdateNow);
             }
             catch { }
         }
@@ -381,6 +380,6 @@ namespace LegacySift
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool SetWindowPos(IntPtr hwnd, IntPtr insertAfter, int x, int y, int cx, int cy, uint flags);
+        private static extern bool RedrawWindow(IntPtr hwnd, IntPtr updateRectangle, IntPtr updateRegion, uint flags);
     }
 }
