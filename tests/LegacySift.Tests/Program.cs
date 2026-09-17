@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -334,6 +335,9 @@ namespace LegacySift.Tests
                 Assert(source.Width == 1254 && source.Height == 1254, "official icon source must preserve its supplied 1254px canvas");
                 Assert(source.RawFormat.Guid == ImageFormat.Png.Guid, "official icon source must remain PNG");
             }
+            const string officialSourceSha256 = "6651f976bc5ce8f4f84d83f2efccb384f836abb788b9ef9bc2b4653ec68d290d";
+            Assert(Sha256(sourcePath) == officialSourceSha256, "project icon source must be byte-identical to the supplied official artwork");
+            Assert(Sha256(documentedSourcePath) == officialSourceSha256, "documentation icon source must be byte-identical to the supplied official artwork");
             Assert(BytesEqual(File.ReadAllBytes(sourcePath), File.ReadAllBytes(documentedSourcePath)), "project and documentation icon sources must be byte-identical");
             foreach (var expected in new[] { 16, 24, 32, 48, 64, 128, 256 })
             {
@@ -346,6 +350,13 @@ namespace LegacySift.Tests
             Assert(File.Exists(FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-logo-light.png"))), "cropped full logo asset must be checked in");
             Assert(!File.Exists(Path.Combine(Path.GetDirectoryName(sourcePath), "legacysift-icon.svg")), "retired application icon SVG must be absent");
             Assert(!File.Exists(Path.Combine(Path.GetDirectoryName(documentedSourcePath), "legacysift-mark.svg")), "retired alternate icon mark must be absent");
+        }
+
+        private static string Sha256(string path)
+        {
+            using (var stream = File.OpenRead(path))
+            using (var algorithm = SHA256.Create())
+                return BitConverter.ToString(algorithm.ComputeHash(stream)).Replace("-", string.Empty).ToLowerInvariant();
         }
 
         private static void TestScriptCoverage()
