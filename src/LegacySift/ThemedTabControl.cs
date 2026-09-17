@@ -41,16 +41,21 @@ namespace LegacySift
 
             var bounds = GetTabRect(e.Index);
             var selected = SelectedIndex == e.Index;
-            using (var background = new SolidBrush(selected ? _palette.Surface : _palette.SecondarySurface))
+            var selectedBackground = _palette.IsDark ? _palette.RaisedSurface : _palette.Surface;
+            var idleBackground = _palette.IsDark ? _palette.AppBackground : _palette.SecondarySurface;
+            using (var background = new SolidBrush(selected ? selectedBackground : idleBackground))
                 e.Graphics.FillRectangle(background, bounds);
 
-            using (var border = new Pen(_palette.Border))
-                e.Graphics.DrawRectangle(border, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
+            if (!_palette.IsDark)
+            {
+                using (var border = new Pen(_palette.Border))
+                    e.Graphics.DrawRectangle(border, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
+            }
 
             if (selected)
             {
                 using (var accent = new SolidBrush(_palette.Primary))
-                    e.Graphics.FillRectangle(accent, bounds.X + 1, bounds.Y + 1, bounds.Width - 2, 3);
+                    e.Graphics.FillRectangle(accent, bounds.X + 1, bounds.Bottom - 3, bounds.Width - 2, 3);
             }
 
             // The native tab rectangle already includes translated-text
@@ -66,7 +71,7 @@ namespace LegacySift
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
 
             if (Focused && selected)
-                ControlPaint.DrawFocusRectangle(e.Graphics, Rectangle.Inflate(bounds, -5, -5), _palette.Text, _palette.Surface);
+                ControlPaint.DrawFocusRectangle(e.Graphics, Rectangle.Inflate(bounds, -5, -5), _palette.Text, selectedBackground);
         }
     }
 }

@@ -355,7 +355,7 @@ namespace LegacySift
 
         private Control CreateCleanupPanel()
         {
-            var cleanupBox = new GroupBox
+            var cleanupBox = new ThemedGroupBox
             {
                 Name = "CleanupGroup",
                 Text = L10n.T("CleanupGroup"),
@@ -575,10 +575,18 @@ namespace LegacySift
             layout.Controls.Add(desc, 0, 1);
             layout.SetColumnSpan(desc, 2);
 
-            box = new TextBox { Name = "FolderPath", Dock = DockStyle.Fill, Margin = new Padding(0, 5, 7, 0) };
+            box = new TextBox { Name = "FolderPath", Dock = DockStyle.Fill, BorderStyle = BorderStyle.None, Margin = new Padding(0) };
+            var inputBorder = new ThemedInputBorder
+            {
+                Name = "FolderPathBorder",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 5, 7, 0),
+                Padding = new Padding(2, 6, 2, 1)
+            };
+            inputBorder.Controls.Add(box);
             browseButton = new ThemedButton { Name = "BrowseButton", Text = L10n.T("Browse"), AutoSize = false, Dock = DockStyle.Fill, Margin = new Padding(4, 3, 0, 0), MinimumSize = new Size(86, 28) };
             browseButton.Click += browseHandler;
-            layout.Controls.Add(box, 0, 2);
+            layout.Controls.Add(inputBorder, 0, 2);
             layout.Controls.Add(browseButton, 1, 2);
             return panel;
         }

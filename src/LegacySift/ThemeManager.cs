@@ -27,13 +27,13 @@ namespace LegacySift
 
         public static readonly ThemePalette Dark = new ThemePalette(
             true,
-            Color.FromArgb(11, 20, 32), Color.FromArgb(17, 30, 45), Color.FromArgb(23, 40, 58), Color.FromArgb(28, 48, 69),
-            Color.FromArgb(43, 64, 86), Color.FromArgb(243, 247, 251), Color.FromArgb(182, 195, 209), Color.FromArgb(116, 131, 150),
-            Color.FromArgb(85, 153, 255), Color.FromArgb(22, 136, 248), Color.FromArgb(53, 153, 250), Color.FromArgb(15, 114, 212),
-            Color.FromArgb(74, 222, 128), Color.FromArgb(251, 191, 36), Color.FromArgb(248, 113, 113),
-            Color.FromArgb(43, 37, 27), Color.FromArgb(137, 103, 39), Color.FromArgb(183, 121, 31),
-            Color.FromArgb(18, 42, 61), Color.FromArgb(38, 111, 167), Color.FromArgb(74, 222, 128),
-            Color.FromArgb(20, 35, 51), Color.FromArgb(22, 78, 122), Color.White);
+            Color.FromArgb(15, 23, 32), Color.FromArgb(21, 31, 43), Color.FromArgb(26, 39, 53), Color.FromArgb(33, 49, 66),
+            Color.FromArgb(48, 65, 84), Color.FromArgb(231, 237, 244), Color.FromArgb(170, 183, 197), Color.FromArgb(113, 128, 150),
+            Color.FromArgb(69, 163, 255), Color.FromArgb(37, 137, 245), Color.FromArgb(59, 154, 247), Color.FromArgb(20, 116, 212),
+            Color.FromArgb(69, 201, 122), Color.FromArgb(217, 164, 65), Color.FromArgb(237, 106, 106),
+            Color.FromArgb(35, 38, 42), Color.FromArgb(93, 78, 52), Color.FromArgb(169, 117, 29),
+            Color.FromArgb(24, 38, 49), Color.FromArgb(46, 86, 105), Color.FromArgb(69, 201, 122),
+            Color.FromArgb(24, 36, 50), Color.FromArgb(22, 78, 122), Color.FromArgb(231, 237, 244));
 
         public bool IsDark { get; private set; }
         public Color AppBackground { get; private set; }
@@ -103,6 +103,23 @@ namespace LegacySift
     {
         private const int DwmUseImmersiveDarkModeBefore20H1 = 19;
         private const int DwmUseImmersiveDarkMode = 20;
+        private const int DwmBorderColor = 34;
+        private const int DwmCaptionColor = 35;
+        private const int DwmTextColor = 36;
+        private const uint SwpNoSize = 0x0001;
+        private const uint SwpNoMove = 0x0002;
+        private const uint SwpNoZOrder = 0x0004;
+        private const uint SwpNoActivate = 0x0010;
+        private const uint SwpFrameChanged = 0x0020;
+
+        internal static int TitleBarApplyCount { get; private set; }
+        internal static bool LastRequestedTitleBarDark { get; private set; }
+        internal static IntPtr LastTitleBarHandle { get; private set; }
+        internal static int LastImmersiveDarkResult { get; private set; }
+        internal static int LastBorderColorResult { get; private set; }
+        internal static int LastCaptionColorResult { get; private set; }
+        internal static int LastTextColorResult { get; private set; }
+        internal static bool LastExplicitCaptionColorsApplied { get; private set; }
 
         public static ThemeMode CurrentMode { get; private set; } = ThemeMode.System;
         public static ThemePalette CurrentPalette { get; private set; } = ResolvePalette(ThemeMode.System);
@@ -195,6 +212,11 @@ namespace LegacySift
                 control.ForeColor = palette.Text;
             }
 
+            var themedInput = control as ThemedInputBorder;
+            if (themedInput != null) themedInput.SetPalette(palette);
+            var themedGroup = control as ThemedGroupBox;
+            if (themedGroup != null) themedGroup.SetPalette(palette);
+
             var grid = control as DataGridView;
             if (grid != null)
             {
@@ -213,9 +235,9 @@ namespace LegacySift
             else if (control is LinkLabel)
             {
                 var link = (LinkLabel)control;
-                link.LinkColor = palette.Primary;
+                link.LinkColor = palette.IsDark ? palette.Navy : palette.Primary;
                 link.ActiveLinkColor = palette.PrimaryPressed;
-                link.VisitedLinkColor = palette.Navy;
+                link.VisitedLinkColor = palette.IsDark ? palette.Primary : palette.Navy;
             }
             else if (control is Label)
             {
@@ -289,9 +311,9 @@ namespace LegacySift
             grid.EnableHeadersVisualStyles = false;
             grid.BackgroundColor = palette.Surface;
             grid.GridColor = palette.Border;
-            grid.BorderStyle = BorderStyle.FixedSingle;
+            grid.BorderStyle = palette.IsDark ? BorderStyle.None : BorderStyle.FixedSingle;
             grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            grid.ColumnHeadersBorderStyle = palette.IsDark ? DataGridViewHeaderBorderStyle.None : DataGridViewHeaderBorderStyle.Single;
             grid.ColumnHeadersDefaultCellStyle.BackColor = palette.SecondarySurface;
             grid.ColumnHeadersDefaultCellStyle.ForeColor = palette.Text;
             grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = palette.SecondarySurface;
@@ -306,19 +328,59 @@ namespace LegacySift
             grid.AlternatingRowsDefaultCellStyle.SelectionForeColor = palette.SelectionText;
         }
 
-        private static void ApplyTitleBar(Form form, bool dark)
+        internal static void ApplyTitleBar(Form form, bool dark)
         {
             if (!form.IsHandleCreated) return;
+            TitleBarApplyCount++;
+            LastRequestedTitleBarDark = dark;
+            LastTitleBarHandle = form.Handle;
             try
             {
                 var enabled = dark ? 1 : 0;
-                if (DwmSetWindowAttribute(form.Handle, DwmUseImmersiveDarkMode, ref enabled, sizeof(int)) != 0)
-                    DwmSetWindowAttribute(form.Handle, DwmUseImmersiveDarkModeBefore20H1, ref enabled, sizeof(int));
+                LastImmersiveDarkResult = DwmSetWindowAttribute(form.Handle, DwmUseImmersiveDarkMode, ref enabled, sizeof(int));
+                if (LastImmersiveDarkResult != 0)
+                    LastImmersiveDarkResult = DwmSetWindowAttribute(form.Handle, DwmUseImmersiveDarkModeBefore20H1, ref enabled, sizeof(int));
+
+                // Windows 11 supports explicit non-client colors. These calls
+                // fail harmlessly with E_INVALIDARG on older Windows builds,
+                // where the immersive-dark hint above remains the fallback.
+                var palette = dark ? ThemePalette.Dark : ThemePalette.Light;
+                var border = ToColorRef(palette.Border);
+                var caption = ToColorRef(dark ? palette.Surface : Color.White);
+                var text = ToColorRef(dark ? palette.Text : palette.Navy);
+                LastBorderColorResult = DwmSetWindowAttribute(form.Handle, DwmBorderColor, ref border, sizeof(int));
+                LastCaptionColorResult = DwmSetWindowAttribute(form.Handle, DwmCaptionColor, ref caption, sizeof(int));
+                LastTextColorResult = DwmSetWindowAttribute(form.Handle, DwmTextColor, ref text, sizeof(int));
+                LastExplicitCaptionColorsApplied = LastBorderColorResult == 0 && LastCaptionColorResult == 0 && LastTextColorResult == 0;
+                if (!LastExplicitCaptionColorsApplied)
+                {
+                    // Do not leave a partially supported combination behind.
+                    // Supported attributes are restored to OS defaults while
+                    // unsupported attributes continue to fail harmlessly.
+                    var systemDefault = unchecked((int)0xFFFFFFFF);
+                    DwmSetWindowAttribute(form.Handle, DwmBorderColor, ref systemDefault, sizeof(int));
+                    DwmSetWindowAttribute(form.Handle, DwmCaptionColor, ref systemDefault, sizeof(int));
+                    DwmSetWindowAttribute(form.Handle, DwmTextColor, ref systemDefault, sizeof(int));
+                }
+
+                // Refresh the native frame without recreating the form handle,
+                // preserving window state, taskbar identity and client layout.
+                SetWindowPos(form.Handle, IntPtr.Zero, 0, 0, 0, 0,
+                    SwpNoMove | SwpNoSize | SwpNoZOrder | SwpNoActivate | SwpFrameChanged);
             }
             catch { }
         }
 
+        private static int ToColorRef(Color color)
+        {
+            return color.R | (color.G << 8) | (color.B << 16);
+        }
+
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int valueSize);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetWindowPos(IntPtr hwnd, IntPtr insertAfter, int x, int y, int cx, int cy, uint flags);
     }
 }

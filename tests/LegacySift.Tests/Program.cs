@@ -37,6 +37,7 @@ namespace LegacySift.Tests
                 TestSavedLanguageSettings();
                 TestSavedThemeSettings();
                 TestThemePalettes();
+                TestNativeTitleBarThemeSwitching();
                 TestApplicationIcon();
                 TestScriptCoverage();
                 TestLayoutMatrix();
@@ -275,6 +276,64 @@ namespace LegacySift.Tests
             Assert(ContrastRatio(dark.SelectionText, dark.Selection) >= 4.5, "dark selected grid text must meet WCAG AA contrast");
             Assert(ContrastRatio(light.DisabledText, light.SecondarySurface) >= 3.0, "light disabled text must remain distinguishable");
             Assert(ContrastRatio(dark.DisabledText, dark.SecondarySurface) >= 3.0, "dark disabled text must remain distinguishable");
+            Assert(dark.AppBackground == Color.FromArgb(15, 23, 32), "dark application background must use the approved restrained base");
+            Assert(dark.Surface == Color.FromArgb(21, 31, 43), "dark primary surface must use the approved restrained base");
+            Assert(dark.Border == Color.FromArgb(48, 65, 84), "dark borders must remain subtle rather than bright");
+            Assert(dark.Primary == Color.FromArgb(37, 137, 245), "dark primary action color must remain the approved blue");
+            Assert(dark.OldSurface.R - dark.OldSurface.B <= 4, "dark OLD surface must be neutral rather than a muddy brown block");
+            Assert(dark.CurrentSurface.B - dark.CurrentSurface.R <= 30, "dark CURRENT surface must be calm rather than a saturated blue slab");
+        }
+
+        private static void TestNativeTitleBarThemeSwitching()
+        {
+            ThemeManager.SetMode(ThemeMode.Light);
+            L10n.SetLanguage(AppLanguage.English);
+            using (var form = new MainForm())
+            {
+                form.PrepareLayoutTest(LayoutTestState.Initial, new Size(1144, 673), 1F);
+                var handle = form.Handle;
+                var clientSize = form.ClientSize;
+                var icon = form.Icon;
+                var before = ThemeManager.TitleBarApplyCount;
+
+                ThemeManager.SetMode(ThemeMode.System);
+                ThemeManager.ApplyTo(form);
+                Application.DoEvents();
+                Assert(ThemeManager.TitleBarApplyCount > before, "selecting System must update the native title bar");
+                Assert(form.Handle == handle && form.ClientSize == clientSize, "System caption refresh must preserve handle and client size");
+
+                before = ThemeManager.TitleBarApplyCount;
+                ThemeManager.SetMode(ThemeMode.Dark);
+                ThemeManager.ApplyTo(form);
+                Application.DoEvents();
+                Assert(ThemeManager.TitleBarApplyCount > before, "switching to Dark must update the native title bar");
+                Assert(ThemeManager.LastRequestedTitleBarDark, "Dark mode must request the immersive dark caption state");
+                Assert(ThemeManager.LastTitleBarHandle == handle && form.Handle == handle, "title-bar updates must not recreate the main form handle");
+                Assert(form.ClientSize == clientSize, "title-bar updates must not change the main client layout");
+                Assert(form.Icon != null && form.Icon == icon, "title-bar updates must preserve the assigned application icon");
+
+                before = ThemeManager.TitleBarApplyCount;
+                ThemeManager.SetMode(ThemeMode.Light);
+                ThemeManager.ApplyTo(form);
+                Application.DoEvents();
+                Assert(ThemeManager.TitleBarApplyCount > before, "switching to Light must update the native title bar");
+                Assert(!ThemeManager.LastRequestedTitleBarDark, "Light mode must clear the immersive dark caption state");
+                Assert(form.Handle == handle && form.ClientSize == clientSize, "Light caption refresh must preserve handle and client size");
+
+                before = ThemeManager.TitleBarApplyCount;
+                ThemeManager.SetMode(ThemeMode.System);
+                ThemeManager.ApplyTo(form);
+                ThemeManager.SetMode(ThemeMode.Dark);
+                ThemeManager.ApplyTo(form);
+                ThemeManager.SetMode(ThemeMode.System);
+                ThemeManager.ApplyTo(form);
+                ThemeManager.SetMode(ThemeMode.Light);
+                ThemeManager.ApplyTo(form);
+                Application.DoEvents();
+                Assert(ThemeManager.TitleBarApplyCount >= before + 4, "System-to-explicit Dark and Light transitions must each refresh the caption");
+                Assert(form.Handle == handle && form.ClientSize == clientSize && form.Icon == icon, "caption transition sequences must preserve form identity, layout and icon");
+            }
+            ThemeManager.SetMode(ThemeMode.System);
         }
 
         private static double ContrastRatio(Color foreground, Color background)
@@ -543,6 +602,19 @@ namespace LegacySift.Tests
                     Assert(Find(form, buttonName) is ThemedButton, prefix + buttonName + " must use theme-aware disabled rendering");
                 Assert(Find(form, "ConfirmCheck") is ThemedCheckBox, prefix + "confirmation must use theme-aware disabled rendering");
                 Assert(Find(form, "ProgressBar") is ThemedProgressBar, prefix + "progress must use the active palette");
+                Assert(Find(form, "CleanupGroup") is ThemedGroupBox, prefix + "cleanup must use the integrated theme-aware section renderer");
+                foreach (var pathName in new[] { "OldPath", "CurrentPath" })
+                {
+                    var path = (TextBox)Find(form, pathName);
+                    Assert(path.BorderStyle == BorderStyle.None, prefix + pathName + " must not retain a bright native frame");
+                    Assert(path.Parent is ThemedInputBorder, prefix + pathName + " must use the focus-aware subtle border host");
+                }
+                foreach (var gridName in new[] { "UniqueGrid", "VersionGrid", "DuplicateGrid", "ErrorGrid" })
+                {
+                    var grid = (DataGridView)Find(form, gridName);
+                    Assert(grid.BorderStyle == (theme == ThemeMode.Dark ? BorderStyle.None : BorderStyle.FixedSingle), prefix + gridName + " outer border must follow the active visual density");
+                    Assert(grid.ColumnHeadersBorderStyle == (theme == ThemeMode.Dark ? DataGridViewHeaderBorderStyle.None : DataGridViewHeaderBorderStyle.Single), prefix + gridName + " header border must follow the active visual density");
+                }
                 var mainTabs = (TabControl)Find(form, "MainTabs");
                 var resultsTabs = (TabControl)Find(form, "ResultsTabs");
                 Assert(TabTextFits(mainTabs), prefix + "main tab labels must remain fully visible; " + DescribeTabMetrics(mainTabs));
@@ -683,6 +755,8 @@ namespace LegacySift.Tests
                 CaptureLayout(outputDirectory, theme, AppLanguage.Italian, LayoutTestState.AnalysisRunning);
             }
 
+            CaptureTitleBarLayouts(outputDirectory);
+
             ThemeManager.SetMode(ThemeMode.System);
             L10n.SetLanguage(AppLanguage.English);
         }
@@ -707,6 +781,56 @@ namespace LegacySift.Tests
                     image.Save(Path.Combine(outputDirectory, fileName), ImageFormat.Png);
                 }
             }
+        }
+
+        private static void CaptureTitleBarLayouts(string outputDirectory)
+        {
+            L10n.SetLanguage(AppLanguage.Italian);
+            ThemeManager.SetMode(ThemeMode.Light);
+            using (var form = new MainForm())
+            using (var focusSink = new Form())
+            {
+                form.PrepareLayoutTest(LayoutTestState.AnalysisCompleted, new Size(900, 610), 1F);
+                form.StartPosition = FormStartPosition.Manual;
+                form.Location = new Point(40, 40);
+                form.Activate();
+                Application.DoEvents();
+
+                CaptureTitleBar(outputDirectory, form, "titlebar-light-active.png");
+                focusSink.ShowInTaskbar = false;
+                focusSink.FormBorderStyle = FormBorderStyle.FixedToolWindow;
+                focusSink.StartPosition = FormStartPosition.Manual;
+                focusSink.Bounds = new Rectangle(10, 680, 180, 60);
+                focusSink.Show();
+                focusSink.Activate();
+                Application.DoEvents();
+                CaptureTitleBar(outputDirectory, form, "titlebar-light-inactive.png");
+
+                focusSink.Hide();
+                form.Activate();
+                ThemeManager.SetMode(ThemeMode.Dark);
+                ThemeManager.ApplyTo(form);
+                Application.DoEvents();
+                CaptureTitleBar(outputDirectory, form, "titlebar-dark-active.png");
+                focusSink.Show();
+                focusSink.Activate();
+                Application.DoEvents();
+                CaptureTitleBar(outputDirectory, form, "titlebar-dark-inactive.png");
+
+                focusSink.Hide();
+                form.Activate();
+                ThemeManager.SetMode(ThemeMode.System);
+                ThemeManager.ApplyTo(form);
+                Application.DoEvents();
+                var systemState = ThemeManager.CurrentPalette.IsDark ? "dark" : "light";
+                CaptureTitleBar(outputDirectory, form, "titlebar-system-host-" + systemState + "-active.png");
+            }
+        }
+
+        private static void CaptureTitleBar(string outputDirectory, MainForm form, string fileName)
+        {
+            using (var image = form.CaptureTitleBarTestImage())
+                image.Save(Path.Combine(outputDirectory, fileName), ImageFormat.Png);
         }
 
         private static Control Find(Control root, string name)

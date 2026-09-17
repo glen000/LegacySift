@@ -1,6 +1,7 @@
 using LegacySift.Core;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace LegacySift
@@ -105,6 +106,22 @@ namespace LegacySift
             return image;
         }
 
+        internal Bitmap CaptureTitleBarTestImage()
+        {
+            RECT windowRect;
+            if (!GetWindowRect(Handle, out windowRect))
+                throw new System.InvalidOperationException("Could not resolve the native window bounds for title-bar QA.");
+
+            var clientOrigin = PointToScreen(Point.Empty);
+            var captionHeight = System.Math.Max(24, clientOrigin.Y - windowRect.Top + 4);
+            captionHeight = System.Math.Min(captionHeight, System.Math.Max(24, windowRect.Bottom - windowRect.Top));
+            var width = System.Math.Max(1, windowRect.Right - windowRect.Left);
+            var image = new Bitmap(width, captionHeight);
+            using (var graphics = Graphics.FromImage(image))
+                graphics.CopyFromScreen(windowRect.Left, windowRect.Top, 0, 0, image.Size, CopyPixelOperation.SourceCopy);
+            return image;
+        }
+
         private static AnalysisResult CreateLayoutTestAnalysis()
         {
             var result = new AnalysisResult
@@ -188,5 +205,18 @@ namespace LegacySift
             foreach (Control child in control.Controls)
                 ScaleAbsoluteTableStyles(child, factor);
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetWindowRect(System.IntPtr handle, out RECT rectangle);
     }
 }

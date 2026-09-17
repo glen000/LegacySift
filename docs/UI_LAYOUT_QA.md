@@ -35,5 +35,9 @@ The 125% and 150% cases are explicit programmatic scaling/font-pressure approxim
 - Dark populated: Italian, German, Simplified Chinese, Hindi and Korean;
 - Light and Dark initial-state Italian views;
 - Light and Dark Italian analysis-in-progress views, including the active progress bar and disabled actions.
+- Native title-bar crops for explicit Light active/inactive and Dark active/inactive states;
+- one System-mode title-bar crop identified as light or dark from the actual Windows runner preference.
 
-Final physical DPI, native title-bar behavior and native-speaker glyph/wording appearance should be spot-checked on Windows before a stable release.
+The title-bar regression test switches System → Dark, Dark → Light, System → Dark and System → Light on the same visible form. It verifies that the caption application path runs, the main handle and icon remain assigned, and `ClientSize` is unchanged. The screenshots include the native icon and caption buttons; tests intentionally avoid pixel-perfect assertions against OS-owned rendering.
+
+GitHub-hosted CI does not change the runner's Windows personalization or physical monitor configuration. Consequently it captures only the runner's actual System mode and does not claim both System-light and System-dark hosts, custom accent-color combinations, physical 125/150% monitors, multi-monitor movement or every Windows 10/11 build. The explicit Light/Dark DWM requests, unsupported-attribute fallback, active/inactive states and non-client refresh are deterministic. Final physical DPI, OS accent combinations, multi-monitor behavior and native-speaker glyph/wording appearance should be spot-checked on Windows before a stable release.
