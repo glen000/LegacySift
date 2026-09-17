@@ -107,7 +107,6 @@ namespace LegacySift
         private const int DwmCaptionColor = 35;
         private const int DwmTextColor = 36;
         private const uint RdwInvalidate = 0x0001;
-        private const uint RdwUpdateNow = 0x0100;
         private const uint RdwFrame = 0x0400;
 
         internal static int TitleBarApplyCount { get; private set; }
@@ -365,7 +364,7 @@ namespace LegacySift
                 // triggers WM_NCCALCSIZE and can change ClientSize on a themed
                 // server session; RDW_FRAME refreshes the caption without that
                 // geometry recalculation or a form-handle recreation.
-                RedrawWindow(form.Handle, IntPtr.Zero, IntPtr.Zero, RdwInvalidate | RdwFrame | RdwUpdateNow);
+                RedrawWindow(form.Handle, IntPtr.Zero, IntPtr.Zero, RdwInvalidate | RdwFrame);
             }
             catch { }
         }
