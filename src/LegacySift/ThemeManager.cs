@@ -18,7 +18,7 @@ namespace LegacySift
         public static readonly ThemePalette Light = new ThemePalette(
             false,
             Color.FromArgb(245, 247, 250), Color.White, Color.FromArgb(240, 244, 248), Color.FromArgb(248, 250, 252),
-            Color.FromArgb(216, 224, 234), Color.FromArgb(16, 36, 62), Color.FromArgb(95, 107, 122), Color.FromArgb(154, 164, 178),
+            Color.FromArgb(216, 224, 234), Color.FromArgb(16, 36, 62), Color.FromArgb(95, 107, 122), Color.FromArgb(112, 123, 138),
             Color.FromArgb(11, 61, 145), Color.FromArgb(22, 136, 248), Color.FromArgb(14, 118, 221), Color.FromArgb(11, 99, 188),
             Color.FromArgb(34, 197, 94), Color.FromArgb(245, 158, 11), Color.FromArgb(239, 68, 68),
             Color.FromArgb(255, 248, 225), Color.FromArgb(215, 171, 80), Color.FromArgb(129, 77, 0),
