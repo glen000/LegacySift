@@ -29,11 +29,41 @@ namespace LegacySift
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
+            UpdateFixedTabMetrics();
             // Owner-drawn native tabs cache their header widths. Recreate the
             // handle after a DPI/font change so translated labels are measured
             // again instead of being drawn into their previous 96-DPI bounds.
             if (IsHandleCreated && !Disposing && !IsDisposed)
                 RecreateHandle();
+        }
+
+        protected override void OnControlAdded(ControlEventArgs e)
+        {
+            base.OnControlAdded(e);
+            UpdateFixedTabMetrics();
+        }
+
+        private void UpdateFixedTabMetrics()
+        {
+            // UserPaint removes the native high-contrast pane frame, but it
+            // also disables the automatic variable-width measurement used by
+            // normal tabs. Main navigation has only two entries, so a uniform
+            // width based on the longest localized label preserves native hit
+            // testing and remains compact at 100/125/150% text pressure.
+            if (SizeMode == TabSizeMode.FillToRight || TabPages.Count == 0) return;
+
+            var width = 1;
+            var height = TextRenderer.MeasureText("Ag", Font, new Size(int.MaxValue, int.MaxValue),
+                TextFormatFlags.SingleLine | TextFormatFlags.NoPadding).Height + 8;
+            foreach (TabPage page in TabPages)
+            {
+                var measured = TextRenderer.MeasureText(page.Text ?? string.Empty, Font,
+                    new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
+                width = Math.Max(width, measured.Width + 16);
+                height = Math.Max(height, measured.Height + 8);
+            }
+            SizeMode = TabSizeMode.Fixed;
+            ItemSize = new Size(width, height);
         }
 
         protected override void OnDrawItem(DrawItemEventArgs e)
