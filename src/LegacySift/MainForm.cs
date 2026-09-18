@@ -937,7 +937,6 @@ namespace LegacySift
             _reportButton.Enabled = !busy && !string.IsNullOrEmpty(_lastReportPath) && File.Exists(_lastReportPath);
             _restoreButton.Enabled = !busy;
             _languageButton.Enabled = !busy;
-            _themeButton.Enabled = !busy;
             if (_confirmCheck != null) _confirmCheck.Enabled = !busy && _analysis != null && _analysis.ExactDuplicateCount > 0;
             UpdateCleanupEnabled();
             if (busy)
