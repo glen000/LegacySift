@@ -66,21 +66,23 @@ namespace LegacySift
             var page = DisplayRectangle;
             if (page.Width <= 0 || page.Height <= 0) return;
 
-            var top = 0;
+            var headerBottom = page.Top;
             for (var index = 0; index < TabPages.Count; index++)
-                top = Math.Max(top, GetTabRect(index).Bottom);
-            top = Math.Min(top, page.Top);
+                headerBottom = Math.Max(headerBottom, GetTabRect(index).Bottom);
 
             using (var background = new SolidBrush(_palette.AppBackground))
             {
+                // The native control paints the unused header strip and the
+                // gaps around owner-drawn tabs with the Windows light theme.
+                // Cover the complete strip first, then redraw real tabs below.
+                graphics.FillRectangle(background, 0, 0, ClientSize.Width,
+                    Math.Min(ClientSize.Height, headerBottom + 1));
                 if (page.Left > 0)
                     graphics.FillRectangle(background, 0, 0, page.Left, ClientSize.Height);
                 if (page.Right < ClientSize.Width)
                     graphics.FillRectangle(background, page.Right, 0, ClientSize.Width - page.Right, ClientSize.Height);
                 if (page.Bottom < ClientSize.Height)
                     graphics.FillRectangle(background, 0, page.Bottom, ClientSize.Width, ClientSize.Height - page.Bottom);
-                if (page.Top > top)
-                    graphics.FillRectangle(background, 0, top, ClientSize.Width, page.Top - top);
             }
 
             if (!_palette.IsDark)
