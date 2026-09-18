@@ -23,7 +23,6 @@ namespace LegacySift
         private Button _reportButton;
         private Button _restoreButton;
         private Button _languageButton;
-        private Button _themeButton;
         private RadioButton _quarantineRadio;
         private RadioButton _recycleRadio;
         private CheckBox _removeEmptyCheck;
@@ -95,12 +94,11 @@ namespace LegacySift
                 Name = "HeaderLayout",
                 Dock = DockStyle.Fill,
                 AutoSize = true,
-                ColumnCount = 3,
+                ColumnCount = 2,
                 Padding = new Padding(12, 2, 12, 1),
                 BackColor = SystemColors.ControlLightLight
             };
             header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
             var brand = new FlowLayoutPanel
@@ -133,14 +131,6 @@ namespace LegacySift
             brand.Controls.Add(title);
             Disposed += (s, e) => mark.Image?.Dispose();
 
-            _themeButton = new ThemedButton
-            {
-                Name = "ThemeButton",
-                Text = L10n.T("ThemeButton"),
-                AutoSize = true,
-                Margin = new Padding(10, 2, 0, 0)
-            };
-            _themeButton.Click += ChangeTheme;
             _languageButton = new ThemedButton
             {
                 Name = "LanguageButton",
@@ -150,8 +140,7 @@ namespace LegacySift
             };
             _languageButton.Click += ChangeLanguage;
             header.Controls.Add(brand, 0, 0);
-            header.Controls.Add(_themeButton, 1, 0);
-            header.Controls.Add(_languageButton, 2, 0);
+            header.Controls.Add(_languageButton, 1, 0);
             root.Controls.Add(header, 0, 0);
 
             var mainTabs = new ThemedTabControl { Name = "MainTabs", Dock = DockStyle.Fill };
@@ -661,17 +650,6 @@ namespace LegacySift
                 if (MessageBox.Show(this, L10n.T("LanguageRestart"), L10n.T("LanguageRestartTitle"), MessageBoxButtons.OKCancel, MessageBoxIcon.Information) != DialogResult.OK) return;
                 SettingsStore.SaveLanguage(dialog.SelectedLanguage);
                 Application.Restart();
-            }
-        }
-
-        private void ChangeTheme(object sender, EventArgs e)
-        {
-            using (var dialog = new ThemeDialog(ThemeManager.CurrentMode))
-            {
-                if (dialog.ShowDialog(this) != DialogResult.OK) return;
-                ThemeManager.SetMode(dialog.SelectedMode);
-                SettingsStore.SaveTheme(dialog.SelectedMode);
-                ThemeManager.ApplyTo(this);
             }
         }
 

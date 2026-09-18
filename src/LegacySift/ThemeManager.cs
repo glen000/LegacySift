@@ -1,4 +1,3 @@
-using Microsoft.Win32;
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -6,17 +5,9 @@ using System.Windows.Forms;
 
 namespace LegacySift
 {
-    internal enum ThemeMode
-    {
-        System,
-        Light,
-        Dark
-    }
-
     internal sealed class ThemePalette
     {
         public static readonly ThemePalette Light = new ThemePalette(
-            false,
             Color.FromArgb(245, 247, 250), Color.White, Color.FromArgb(240, 244, 248), Color.FromArgb(248, 250, 252),
             Color.FromArgb(216, 224, 234), Color.FromArgb(16, 36, 62), Color.FromArgb(95, 107, 122), Color.FromArgb(112, 123, 138),
             Color.FromArgb(11, 61, 145), Color.FromArgb(22, 136, 248), Color.FromArgb(14, 118, 221), Color.FromArgb(11, 99, 188),
@@ -25,17 +16,6 @@ namespace LegacySift
             Color.FromArgb(235, 246, 255), Color.FromArgb(103, 174, 238), Color.FromArgb(27, 94, 32),
             Color.FromArgb(247, 250, 253), Color.FromArgb(215, 235, 255), Color.FromArgb(16, 36, 62));
 
-        public static readonly ThemePalette Dark = new ThemePalette(
-            true,
-            Color.FromArgb(15, 23, 32), Color.FromArgb(21, 31, 43), Color.FromArgb(26, 39, 53), Color.FromArgb(33, 49, 66),
-            Color.FromArgb(48, 65, 84), Color.FromArgb(231, 237, 244), Color.FromArgb(170, 183, 197), Color.FromArgb(113, 128, 150),
-            Color.FromArgb(69, 163, 255), Color.FromArgb(37, 137, 245), Color.FromArgb(59, 154, 247), Color.FromArgb(20, 116, 212),
-            Color.FromArgb(69, 201, 122), Color.FromArgb(217, 164, 65), Color.FromArgb(237, 106, 106),
-            Color.FromArgb(35, 38, 42), Color.FromArgb(93, 78, 52), Color.FromArgb(169, 117, 29),
-            Color.FromArgb(24, 38, 49), Color.FromArgb(46, 86, 105), Color.FromArgb(69, 201, 122),
-            Color.FromArgb(24, 36, 50), Color.FromArgb(22, 78, 122), Color.FromArgb(231, 237, 244));
-
-        public bool IsDark { get; private set; }
         public Color AppBackground { get; private set; }
         public Color Surface { get; private set; }
         public Color SecondarySurface { get; private set; }
@@ -62,7 +42,6 @@ namespace LegacySift
         public Color SelectionText { get; private set; }
 
         private ThemePalette(
-            bool isDark,
             Color appBackground, Color surface, Color secondarySurface, Color raisedSurface,
             Color border, Color text, Color secondaryText, Color disabledText,
             Color navy, Color primary, Color primaryHover, Color primaryPressed,
@@ -71,7 +50,6 @@ namespace LegacySift
             Color currentSurface, Color currentBorder, Color protectedColor,
             Color gridAlternate, Color selection, Color selectionText)
         {
-            IsDark = isDark;
             AppBackground = appBackground;
             Surface = surface;
             SecondarySurface = secondarySurface;
@@ -106,59 +84,32 @@ namespace LegacySift
         private const int DwmBorderColor = 34;
         private const int DwmCaptionColor = 35;
         private const int DwmTextColor = 36;
+        private const int DwmColorDefault = unchecked((int)0xFFFFFFFF);
+        private const int DwmColorNone = unchecked((int)0xFFFFFFFE);
         private const uint RdwInvalidate = 0x0001;
         private const uint RdwFrame = 0x0400;
 
         internal static int TitleBarApplyCount { get; private set; }
-        internal static bool LastRequestedTitleBarDark { get; private set; }
         internal static IntPtr LastTitleBarHandle { get; private set; }
-        internal static int LastImmersiveDarkResult { get; private set; }
+        internal static int LastImmersiveLightResult { get; private set; }
         internal static int LastBorderColorResult { get; private set; }
         internal static int LastCaptionColorResult { get; private set; }
         internal static int LastTextColorResult { get; private set; }
         internal static bool LastExplicitCaptionColorsApplied { get; private set; }
 
-        public static ThemeMode CurrentMode { get; private set; } = ThemeMode.System;
-        public static ThemePalette CurrentPalette { get; private set; } = ResolvePalette(ThemeMode.System);
-
-        public static void SetMode(ThemeMode mode)
-        {
-            CurrentMode = mode;
-            CurrentPalette = ResolvePalette(mode);
-        }
-
-        public static ThemePalette ResolvePalette(ThemeMode mode)
-        {
-            if (mode == ThemeMode.Dark) return ThemePalette.Dark;
-            if (mode == ThemeMode.Light) return ThemePalette.Light;
-            return IsWindowsAppThemeDark() ? ThemePalette.Dark : ThemePalette.Light;
-        }
-
-        internal static bool IsWindowsAppThemeDark()
-        {
-            try
-            {
-                using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
-                {
-                    var value = key == null ? null : key.GetValue("AppsUseLightTheme");
-                    if (value is int) return (int)value == 0;
-                }
-            }
-            catch { }
-            return false;
-        }
+        public static ThemePalette CurrentPalette { get { return ThemePalette.Light; } }
 
         public static void ApplyTo(Control root)
         {
             if (root == null) return;
-            var palette = CurrentPalette;
+            var palette = ThemePalette.Light;
             var form = root as Form;
             if (form != null)
             {
                 form.BackColor = palette.AppBackground;
                 form.ForeColor = palette.Text;
                 if (form.IsHandleCreated)
-                    ApplyTitleBar(form, palette.IsDark);
+                    ApplyTitleBar(form);
                 else
                 {
                     form.HandleCreated -= ApplyTitleBarWhenReady;
@@ -174,7 +125,7 @@ namespace LegacySift
             var form = sender as Form;
             if (form == null) return;
             form.HandleCreated -= ApplyTitleBarWhenReady;
-            ApplyTitleBar(form, CurrentPalette.IsDark);
+            ApplyTitleBar(form);
         }
 
         private static void ApplyControl(Control control, ThemePalette palette, Color inheritedBackColor)
@@ -232,9 +183,9 @@ namespace LegacySift
             else if (control is LinkLabel)
             {
                 var link = (LinkLabel)control;
-                link.LinkColor = palette.IsDark ? palette.Navy : palette.Primary;
+                link.LinkColor = palette.Primary;
                 link.ActiveLinkColor = palette.PrimaryPressed;
-                link.VisitedLinkColor = palette.IsDark ? palette.Primary : palette.Navy;
+                link.VisitedLinkColor = palette.Navy;
             }
             else if (control is Label)
             {
@@ -264,8 +215,7 @@ namespace LegacySift
 
         private static void ApplyButton(Button button, ThemePalette palette)
         {
-            var primary = button.Name == "AnalyzeButton" || button.Name == "CleanupButton" ||
-                          button.Name == "ThemeOk" || button.Name == "LanguageOk";
+            var primary = button.Name == "AnalyzeButton" || button.Name == "CleanupButton" || button.Name == "LanguageOk";
             button.UseVisualStyleBackColor = false;
             button.FlatStyle = FlatStyle.Flat;
             button.FlatAppearance.BorderSize = 1;
@@ -290,7 +240,7 @@ namespace LegacySift
             else if (label.Name == "ProtectedReminder")
                 label.ForeColor = palette.Protected;
             else if (label.Name == "StatusLabel" || label.Name == "FolderDescription" || label.Name == "ResultExplanation" ||
-                     label.Name == "LanguageRecoveryHelp" || label.Name == "ThemeHint")
+                     label.Name == "LanguageRecoveryHelp")
                 label.ForeColor = palette.SecondaryText;
             else
                 label.ForeColor = palette.Text;
@@ -308,9 +258,9 @@ namespace LegacySift
             grid.EnableHeadersVisualStyles = false;
             grid.BackgroundColor = palette.Surface;
             grid.GridColor = palette.Border;
-            grid.BorderStyle = palette.IsDark ? BorderStyle.None : BorderStyle.FixedSingle;
+            grid.BorderStyle = BorderStyle.FixedSingle;
             grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            grid.ColumnHeadersBorderStyle = palette.IsDark ? DataGridViewHeaderBorderStyle.None : DataGridViewHeaderBorderStyle.Single;
+            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             grid.ColumnHeadersDefaultCellStyle.BackColor = palette.SecondarySurface;
             grid.ColumnHeadersDefaultCellStyle.ForeColor = palette.Text;
             grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = palette.SecondarySurface;
@@ -325,45 +275,33 @@ namespace LegacySift
             grid.AlternatingRowsDefaultCellStyle.SelectionForeColor = palette.SelectionText;
         }
 
-        internal static void ApplyTitleBar(Form form, bool dark)
+        internal static void ApplyTitleBar(Form form)
         {
             if (!form.IsHandleCreated) return;
             TitleBarApplyCount++;
-            LastRequestedTitleBarDark = dark;
             LastTitleBarHandle = form.Handle;
             try
             {
-                var enabled = dark ? 1 : 0;
-                LastImmersiveDarkResult = DwmSetWindowAttribute(form.Handle, DwmUseImmersiveDarkMode, ref enabled, sizeof(int));
-                if (LastImmersiveDarkResult != 0)
-                    LastImmersiveDarkResult = DwmSetWindowAttribute(form.Handle, DwmUseImmersiveDarkModeBefore20H1, ref enabled, sizeof(int));
+                var disabled = 0;
+                LastImmersiveLightResult = DwmSetWindowAttribute(form.Handle, DwmUseImmersiveDarkMode, ref disabled, sizeof(int));
+                if (LastImmersiveLightResult != 0)
+                    LastImmersiveLightResult = DwmSetWindowAttribute(form.Handle, DwmUseImmersiveDarkModeBefore20H1, ref disabled, sizeof(int));
 
-                // Windows 11 supports explicit non-client colors. These calls
-                // fail harmlessly with E_INVALIDARG on older Windows builds,
-                // where the immersive-dark hint above remains the fallback.
-                var palette = dark ? ThemePalette.Dark : ThemePalette.Light;
-                var border = ToColorRef(palette.Border);
-                var caption = ToColorRef(dark ? palette.Surface : Color.White);
-                var text = ToColorRef(dark ? palette.Text : palette.Navy);
+                var border = DwmColorNone;
+                var caption = ToColorRef(Color.White);
+                var text = ToColorRef(ThemePalette.Light.Navy);
                 LastBorderColorResult = DwmSetWindowAttribute(form.Handle, DwmBorderColor, ref border, sizeof(int));
                 LastCaptionColorResult = DwmSetWindowAttribute(form.Handle, DwmCaptionColor, ref caption, sizeof(int));
                 LastTextColorResult = DwmSetWindowAttribute(form.Handle, DwmTextColor, ref text, sizeof(int));
                 LastExplicitCaptionColorsApplied = LastBorderColorResult == 0 && LastCaptionColorResult == 0 && LastTextColorResult == 0;
                 if (!LastExplicitCaptionColorsApplied)
                 {
-                    // Do not leave a partially supported combination behind.
-                    // Supported attributes are restored to OS defaults while
-                    // unsupported attributes continue to fail harmlessly.
-                    var systemDefault = unchecked((int)0xFFFFFFFF);
+                    var systemDefault = DwmColorDefault;
                     DwmSetWindowAttribute(form.Handle, DwmBorderColor, ref systemDefault, sizeof(int));
                     DwmSetWindowAttribute(form.Handle, DwmCaptionColor, ref systemDefault, sizeof(int));
                     DwmSetWindowAttribute(form.Handle, DwmTextColor, ref systemDefault, sizeof(int));
                 }
 
-                // Repaint only the native frame. SWP_FRAMECHANGED deliberately
-                // triggers WM_NCCALCSIZE and can change ClientSize on a themed
-                // server session; RDW_FRAME refreshes the caption without that
-                // geometry recalculation or a form-handle recreation.
                 RedrawWindow(form.Handle, IntPtr.Zero, IntPtr.Zero, RdwInvalidate | RdwFrame);
             }
             catch { }

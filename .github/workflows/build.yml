@@ -50,11 +50,10 @@ jobs:
           try { Write-Host "Packaged EXE icon: $($exeIcon.Width)x$($exeIcon.Height)" }
           finally { $exeIcon.Dispose() }
           $screenshots = @(Get-ChildItem layout-screenshots\*.png | Sort-Object Name)
-          if ($screenshots.Count -lt 23) { throw "Expected at least 23 client and title-bar screenshots; found $($screenshots.Count)." }
-          @('titlebar-light-active.png', 'titlebar-light-inactive.png', 'titlebar-dark-active.png', 'titlebar-dark-inactive.png') | ForEach-Object {
+          if ($screenshots.Count -lt 13) { throw "Expected at least 13 Light client and title-bar screenshots; found $($screenshots.Count)." }
+          @('titlebar-light-active.png', 'titlebar-light-inactive.png') | ForEach-Object {
             if (-not (Test-Path (Join-Path 'layout-screenshots' $_))) { throw "Missing required title-bar screenshot: $_" }
           }
-          if (@(Get-ChildItem 'layout-screenshots\titlebar-system-host-*-active.png').Count -ne 1) { throw 'Expected exactly one title-bar screenshot for the actual Windows host System mode.' }
           $screenshots | ForEach-Object {
             $image = [System.Drawing.Image]::FromFile($_.FullName)
             try { Write-Host "Layout screenshot: $($_.Name) $($image.Width)x$($image.Height) ($($_.Length) bytes)" }

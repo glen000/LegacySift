@@ -85,11 +85,8 @@ namespace LegacySift
                     graphics.FillRectangle(background, 0, page.Bottom, ClientSize.Width, ClientSize.Height - page.Bottom);
             }
 
-            if (!_palette.IsDark)
-            {
-                using (var border = new Pen(_palette.Border))
-                    graphics.DrawRectangle(border, page.X - 1, page.Y - 1, page.Width + 1, page.Height + 1);
-            }
+            using (var border = new Pen(_palette.Border))
+                graphics.DrawRectangle(border, page.X - 1, page.Y - 1, page.Width + 1, page.Height + 1);
 
             // Redraw headers last so the selected underline and focus cue sit
             // above the pane-edge cover while native rectangles remain intact.
@@ -103,16 +100,13 @@ namespace LegacySift
 
             var bounds = GetTabRect(index);
             var selected = SelectedIndex == index;
-            var selectedBackground = _palette.IsDark ? _palette.RaisedSurface : _palette.Surface;
-            var idleBackground = _palette.IsDark ? _palette.AppBackground : _palette.SecondarySurface;
+            var selectedBackground = _palette.Surface;
+            var idleBackground = _palette.SecondarySurface;
             using (var background = new SolidBrush(selected ? selectedBackground : idleBackground))
                 graphics.FillRectangle(background, bounds);
 
-            if (!_palette.IsDark)
-            {
-                using (var border = new Pen(_palette.Border))
-                    graphics.DrawRectangle(border, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
-            }
+            using (var border = new Pen(_palette.Border))
+                graphics.DrawRectangle(border, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
 
             if (selected)
             {

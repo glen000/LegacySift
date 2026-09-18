@@ -44,9 +44,9 @@ See [Localization](docs/LOCALIZATION.md) and [UI layout QA](docs/UI_LAYOUT_QA.md
 
 ## Status
 
-LegacySift 0.2.3-alpha is currently in alpha development. It includes the refined light/dark visual system and the System/Light/Dark preference while preserving the 34-language safety workflow. Do not use an alpha build as the only copy of important data.
+LegacySift 0.2.3-alpha is currently in alpha development. It uses one refined Light visual style while preserving the 34-language safety workflow. Dark and System-following visual modes are not shipped. Do not use an alpha build as the only copy of important data.
 
-See [Visual identity and themes](docs/VISUAL_THEME.md) for the asset locations, theme behavior and deliberate native-control compromises.
+See [Visual identity and Light UI](docs/VISUAL_THEME.md) for the asset locations, centralized palette and deliberate native-control compromises.
 
 ## License
 

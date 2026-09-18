@@ -56,7 +56,7 @@ namespace LegacySift
                 case AppLanguage.Lithuanian: dictionary = Lt; break;
                 default: dictionary = En; break;
             }
-            return WithThemeStrings(language, dictionary);
+            return dictionary;
         }
     }
 }
