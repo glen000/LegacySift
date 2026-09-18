@@ -6,6 +6,9 @@ namespace LegacySift
 {
     internal sealed class ThemedTabControl : TabControl
     {
+        private const int WmPaint = 0x000F;
+        private const int WmPrint = 0x0317;
+        private const int WmPrintClient = 0x0318;
         private ThemePalette _palette = ThemePalette.Light;
 
         public ThemedTabControl()
@@ -14,8 +17,7 @@ namespace LegacySift
             // Keep translated result tabs on one compact desktop row. Text is
             // never shortened; only decorative horizontal padding is reduced.
             Padding = new Point(8, 4);
-            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
         }
 
         public void SetPalette(ThemePalette palette)
@@ -29,7 +31,6 @@ namespace LegacySift
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
-            UpdateFixedTabMetrics();
             // Owner-drawn native tabs cache their header widths. Recreate the
             // handle after a DPI/font change so translated labels are measured
             // again instead of being drawn into their previous 96-DPI bounds.
@@ -37,60 +38,61 @@ namespace LegacySift
                 RecreateHandle();
         }
 
-        protected override void OnControlAdded(ControlEventArgs e)
-        {
-            base.OnControlAdded(e);
-            UpdateFixedTabMetrics();
-        }
-
-        private void UpdateFixedTabMetrics()
-        {
-            // UserPaint removes the native high-contrast pane frame, but it
-            // also disables the automatic variable-width measurement used by
-            // normal tabs. Main navigation has only two entries, so a uniform
-            // width based on the longest localized label preserves native hit
-            // testing and remains compact at 100/125/150% text pressure.
-            if (SizeMode == TabSizeMode.FillToRight || TabPages.Count == 0) return;
-
-            var width = 1;
-            var height = TextRenderer.MeasureText("Ag", Font, new Size(int.MaxValue, int.MaxValue),
-                TextFormatFlags.SingleLine | TextFormatFlags.NoPadding).Height + 8;
-            foreach (TabPage page in TabPages)
-            {
-                var measured = TextRenderer.MeasureText(page.Text ?? string.Empty, Font,
-                    new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
-                width = Math.Max(width, measured.Width + 16);
-                height = Math.Max(height, measured.Height + 8);
-            }
-            SizeMode = TabSizeMode.Fixed;
-            ItemSize = new Size(width, height);
-        }
-
         protected override void OnDrawItem(DrawItemEventArgs e)
         {
             DrawTab(e.Graphics, e.Index);
         }
 
-        protected override void OnPaintBackground(PaintEventArgs e)
+
+        protected override void WndProc(ref Message message)
         {
-            e.Graphics.Clear(_palette.AppBackground);
+            var paint = message.Msg == WmPaint;
+            var print = message.Msg == WmPrint || message.Msg == WmPrintClient;
+            base.WndProc(ref message);
+            if (!paint && !print) return;
+
+            try
+            {
+                using (var graphics = print && message.WParam != IntPtr.Zero
+                    ? Graphics.FromHdc(message.WParam)
+                    : Graphics.FromHwnd(Handle))
+                    PaintPaneOverlay(graphics);
+            }
+            catch { }
         }
 
-        protected override void OnPaint(PaintEventArgs e)
+        private void PaintPaneOverlay(Graphics graphics)
         {
-            e.Graphics.Clear(_palette.AppBackground);
-            var pageBounds = DisplayRectangle;
-            using (var pageBackground = new SolidBrush(_palette.AppBackground))
-                e.Graphics.FillRectangle(pageBackground, pageBounds);
-            if (!_palette.IsDark && pageBounds.Width > 0 && pageBounds.Height > 0)
+            var page = DisplayRectangle;
+            if (page.Width <= 0 || page.Height <= 0) return;
+
+            var top = 0;
+            for (var index = 0; index < TabPages.Count; index++)
+                top = Math.Max(top, GetTabRect(index).Bottom);
+            top = Math.Min(top, page.Top);
+
+            using (var background = new SolidBrush(_palette.AppBackground))
             {
-                using (var border = new Pen(_palette.Border))
-                    e.Graphics.DrawRectangle(border, pageBounds.X, pageBounds.Y,
-                        Math.Max(0, pageBounds.Width - 1), Math.Max(0, pageBounds.Height - 1));
+                if (page.Left > 0)
+                    graphics.FillRectangle(background, 0, 0, page.Left, ClientSize.Height);
+                if (page.Right < ClientSize.Width)
+                    graphics.FillRectangle(background, page.Right, 0, ClientSize.Width - page.Right, ClientSize.Height);
+                if (page.Bottom < ClientSize.Height)
+                    graphics.FillRectangle(background, 0, page.Bottom, ClientSize.Width, ClientSize.Height - page.Bottom);
+                if (page.Top > top)
+                    graphics.FillRectangle(background, 0, top, ClientSize.Width, page.Top - top);
             }
 
+            if (!_palette.IsDark)
+            {
+                using (var border = new Pen(_palette.Border))
+                    graphics.DrawRectangle(border, page.X - 1, page.Y - 1, page.Width + 1, page.Height + 1);
+            }
+
+            // Redraw headers last so the selected underline and focus cue sit
+            // above the pane-edge cover while native rectangles remain intact.
             for (var index = 0; index < TabPages.Count; index++)
-                DrawTab(e.Graphics, index);
+                DrawTab(graphics, index);
         }
 
         private void DrawTab(Graphics graphics, int index)
