@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file
+      path="LegacySift.exe"
+      product-name="LegacySift"
+      product-version="${version}"
+      file-version="${version}"
+      original-filename="LegacySift.exe">
+      <authenticode-sign
+        hash-algorithm="sha256"
+        description="LegacySift"
+        description-url="https://github.com/glen000/LegacySift" />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

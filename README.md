@@ -48,6 +48,14 @@ LegacySift 0.2.3-alpha is currently in alpha development. It uses one refined Li
 
 See [Visual identity and Light UI](docs/VISUAL_THEME.md) for the asset locations, centralized palette and deliberate native-control compromises.
 
+## Code signing policy
+
+Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+
+The SignPath Foundation integration is being prepared. Alpha artifacts may remain unsigned until the project is accepted and release signing is activated.
+
+See the full [Code signing policy](docs/CODE_SIGNING.md) and [Privacy policy](docs/PRIVACY.md).
+
 ## License
 
 LegacySift is released under the MIT License.
