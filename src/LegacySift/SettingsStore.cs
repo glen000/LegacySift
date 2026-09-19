@@ -20,11 +20,7 @@ namespace LegacySift
             try
             {
                 if (!File.Exists(SettingsPath)) return L10n.DetectDefaultLanguage();
-                foreach (var line in File.ReadAllLines(SettingsPath))
-                {
-                    if (line.Equals("language=it", StringComparison.OrdinalIgnoreCase)) return AppLanguage.Italian;
-                    if (line.Equals("language=en", StringComparison.OrdinalIgnoreCase)) return AppLanguage.English;
-                }
+                return ParseLanguageSetting(File.ReadAllLines(SettingsPath), L10n.DetectDefaultLanguage());
             }
             catch { }
             return L10n.DetectDefaultLanguage();
@@ -34,9 +30,25 @@ namespace LegacySift
         {
             try
             {
-                File.WriteAllText(SettingsPath, language == AppLanguage.Italian ? "language=it\r\n" : "language=en\r\n");
+                File.WriteAllText(SettingsPath, SerializeLanguageSetting(language));
             }
             catch { }
+        }
+
+        internal static AppLanguage ParseLanguageSetting(string[] lines, AppLanguage fallback)
+        {
+            if (lines == null) return fallback;
+            foreach (var line in lines)
+            {
+                if (line == null || !line.StartsWith("language=", StringComparison.OrdinalIgnoreCase)) continue;
+                return L10n.FromCode(line.Substring("language=".Length));
+            }
+            return fallback;
+        }
+
+        internal static string SerializeLanguageSetting(AppLanguage language)
+        {
+            return "language=" + L10n.ToCode(language) + "\r\n";
         }
     }
 }

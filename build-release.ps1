@@ -3,8 +3,8 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $root
 
-msbuild LegacySift.sln /m /p:Configuration=Release /p:Platform="Any CPU"
-& .\tests\LegacySift.Tests\bin\Release\LegacySift.Tests.exe
+msbuild LegacySift.sln /m /warnaserror /p:Configuration=Release /p:Platform="Any CPU"
+& .\tests\LegacySift.Tests\bin\Release\LegacySift.Tests.exe --capture-layout .\layout-screenshots
 if ($LASTEXITCODE -ne 0) { throw "LegacySift smoke tests failed." }
 
 Remove-Item -Recurse -Force .\dist -ErrorAction SilentlyContinue

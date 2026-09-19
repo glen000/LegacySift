@@ -21,11 +21,17 @@ jobs:
 
       - name: Build Release
         shell: pwsh
-        run: msbuild LegacySift.sln /m /p:Configuration=Release /p:Platform="Any CPU"
+        run: msbuild LegacySift.sln /m /warnaserror /p:Configuration=Release /p:Platform="Any CPU"
+
+      - name: Verify removed localization is absent from shipped sources
+        shell: pwsh
+        run: |
+          $hits = Get-ChildItem src -Recurse -File | Select-String -Pattern 'AppLanguage\.Russian|FlagKind\.Russia|Русский|language=ru'
+          if ($hits) { $hits | ForEach-Object { Write-Error $_ }; throw 'Removed Russian localization is still present in shipped sources.' }
 
       - name: Run smoke tests
         shell: pwsh
-        run: .\tests\LegacySift.Tests\bin\Release\LegacySift.Tests.exe
+        run: .\tests\LegacySift.Tests\bin\Release\LegacySift.Tests.exe --capture-layout .\layout-screenshots
 
       - name: Package portable build
         shell: pwsh
@@ -35,7 +41,15 @@ jobs:
           Copy-Item README.md dist\README.md
           Copy-Item LICENSE dist\LICENSE.txt
           Compress-Archive -Path dist\LegacySift.exe,dist\README.md,dist\LICENSE.txt -DestinationPath LegacySift-windows.zip -Force
-          (Get-FileHash LegacySift-windows.zip -Algorithm SHA256).Hash.ToLower() + "  LegacySift-windows.zip" | Set-Content LegacySift-windows.zip.sha256 -Encoding ascii
+          $zipHash = (Get-FileHash LegacySift-windows.zip -Algorithm SHA256).Hash.ToLower()
+          "$zipHash  LegacySift-windows.zip" | Set-Content LegacySift-windows.zip.sha256 -Encoding ascii
+          Write-Host "Portable ZIP SHA256: $zipHash"
+          Add-Type -AssemblyName System.Drawing
+          Get-ChildItem layout-screenshots\*.png | Sort-Object Name | ForEach-Object {
+            $image = [System.Drawing.Image]::FromFile($_.FullName)
+            try { Write-Host "Layout screenshot: $($_.Name) $($image.Width)x$($image.Height) ($($_.Length) bytes)" }
+            finally { $image.Dispose() }
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -44,3 +58,4 @@ jobs:
           path: |
             LegacySift-windows.zip
             LegacySift-windows.zip.sha256
+            layout-screenshots\*.png
