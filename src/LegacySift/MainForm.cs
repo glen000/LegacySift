@@ -49,6 +49,7 @@ namespace LegacySift
         public MainForm()
         {
             Text = L10n.T("AppTitle");
+            Icon = AppIcon.CreateIcon();
             StartPosition = FormStartPosition.CenterScreen;
             Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             AutoScaleDimensions = new SizeF(96F, 96F);
@@ -56,8 +57,10 @@ namespace LegacySift
             MinimumSize = new Size(860, 620);
             Size = new Size(1160, 740);
             BuildUi();
+            ThemeManager.ApplyTo(this);
             Shown += (s, e) =>
             {
+                ThemeManager.ApplyTo(this);
                 if (!_layoutTestMode) FitDefaultWindowToWorkingArea();
             };
         }
@@ -92,32 +95,55 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 ColumnCount = 2,
-                Padding = new Padding(12, 5, 12, 4),
+                Padding = new Padding(12, 2, 12, 1),
                 BackColor = SystemColors.ControlLightLight
             };
             header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
+            var brand = new FlowLayoutPanel
+            {
+                Name = "HeaderBrand",
+                AutoSize = true,
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                Margin = new Padding(0),
+                Padding = new Padding(0)
+            };
+            var mark = new PictureBox
+            {
+                Name = "HeaderMark",
+                Image = AppIcon.CreateBitmap(24),
+                Size = new Size(24, 24),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                Margin = new Padding(0, 1, 7, 0)
+            };
             var title = new Label
             {
                 Name = "AppHeading",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                Text = "LegacySift"
+                Text = "LegacySift",
+                Margin = new Padding(0)
             };
-            _languageButton = new Button
+            brand.Controls.Add(mark);
+            brand.Controls.Add(title);
+            Disposed += (s, e) => mark.Image?.Dispose();
+
+            _languageButton = new ThemedButton
             {
                 Name = "LanguageButton",
                 Text = L10n.T("LanguageButton"),
                 AutoSize = true,
-                Margin = new Padding(10, 3, 0, 0)
+                Margin = new Padding(10, 2, 0, 0)
             };
             _languageButton.Click += ChangeLanguage;
-            header.Controls.Add(title, 0, 0);
+            header.Controls.Add(brand, 0, 0);
             header.Controls.Add(_languageButton, 1, 0);
             root.Controls.Add(header, 0, 0);
 
-            var mainTabs = new TabControl { Name = "MainTabs", Dock = DockStyle.Fill };
+            var mainTabs = new ThemedTabControl { Name = "MainTabs", Dock = DockStyle.Fill };
             var workPage = new TabPage(L10n.T("TabWork")) { Name = "WorkPage" };
             var helpPage = new TabPage(L10n.T("TabHelp")) { Name = "HelpPage" };
             mainTabs.TabPages.Add(workPage);
@@ -136,7 +162,7 @@ namespace LegacySift
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 6,
-                Padding = new Padding(8, 6, 8, 6)
+                Padding = new Padding(8, 4, 8, 2)
             };
             outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -240,7 +266,7 @@ namespace LegacySift
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
-            _analyzeButton = new Button
+            _analyzeButton = new ThemedButton
             {
                 Name = "AnalyzeButton",
                 Text = L10n.T("Analyze"),
@@ -250,9 +276,9 @@ namespace LegacySift
                 Padding = new Padding(8, 2, 8, 2)
             };
             _analyzeButton.Click += async (s, e) => await AnalyzeAsync();
-            _cancelButton = new Button { Name = "CancelButton", Text = L10n.T("Cancel"), AutoSize = true, MinimumSize = new Size(90, 34), Enabled = false };
+            _cancelButton = new ThemedButton { Name = "CancelButton", Text = L10n.T("Cancel"), AutoSize = true, MinimumSize = new Size(90, 34), Enabled = false };
             _cancelButton.Click += (s, e) => _cts?.Cancel();
-            _reportButton = new Button { Name = "ReportButton", Text = L10n.T("OpenReport"), AutoSize = true, MinimumSize = new Size(130, 34), Enabled = false };
+            _reportButton = new ThemedButton { Name = "ReportButton", Text = L10n.T("OpenReport"), AutoSize = true, MinimumSize = new Size(130, 34), Enabled = false };
             _reportButton.Click += (s, e) => OpenReport();
             actionBar.Controls.Add(_analyzeButton);
             actionBar.Controls.Add(_cancelButton);
@@ -261,7 +287,7 @@ namespace LegacySift
 
             var progressArea = new TableLayoutPanel { Name = "ProgressArea", Dock = DockStyle.Fill, AutoSize = true, ColumnCount = 1, RowCount = 2, Margin = new Padding(0) };
             progressArea.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            _progress = new ProgressBar { Name = "ProgressBar", Dock = DockStyle.Fill, Height = 8, Style = ProgressBarStyle.Continuous, Margin = new Padding(0) };
+            _progress = new ThemedProgressBar { Name = "ProgressBar", Dock = DockStyle.Fill, Height = 8, Style = ProgressBarStyle.Continuous, Margin = new Padding(0) };
             _statusLabel = new Label { Name = "StatusLabel", AutoSize = true, Text = L10n.T("Ready"), ForeColor = SystemColors.GrayText, Margin = new Padding(0) };
             progressArea.Controls.Add(_progress, 0, 0);
             progressArea.Controls.Add(_statusLabel, 0, 1);
@@ -276,7 +302,7 @@ namespace LegacySift
                 Height = 42,
                 BackColor = Color.FromArgb(245, 247, 250),
                 Padding = new Padding(7, 4, 7, 4),
-                Margin = new Padding(0, 1, 0, 3)
+                Margin = new Padding(0)
             };
             _summaryLabel = new Label
             {
@@ -290,13 +316,14 @@ namespace LegacySift
             summaryPanel.Controls.Add(_summaryLabel);
             outer.Controls.Add(summaryPanel, 0, 3);
 
-            _resultsTabs = new TabControl
+            _resultsTabs = new ThemedTabControl
             {
                 Name = "ResultsTabs",
                 Dock = DockStyle.Fill,
                 MinimumSize = new Size(0, 80),
                 Margin = new Padding(0),
-                Multiline = true
+                Multiline = true,
+                SizeMode = TabSizeMode.FillToRight
             };
             _uniqueGrid = CreateGrid();
             _versionGrid = CreateGrid();
@@ -317,7 +344,7 @@ namespace LegacySift
 
         private Control CreateCleanupPanel()
         {
-            var cleanupBox = new GroupBox
+            var cleanupBox = new ThemedGroupBox
             {
                 Name = "CleanupGroup",
                 Text = L10n.T("CleanupGroup"),
@@ -325,7 +352,7 @@ namespace LegacySift
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = new Padding(7, 3, 7, 3),
-                Margin = new Padding(0, 2, 0, 0)
+                Margin = new Padding(0)
             };
 
             var cleanupLayout = new TableLayoutPanel
@@ -414,14 +441,14 @@ namespace LegacySift
                 if (_recycleRadio.Checked) _quarantineRadio.Checked = false;
                 else if (!_quarantineRadio.Checked) _quarantineRadio.Checked = true;
             };
-            _removeEmptyCheck = new CheckBox { Name = "RemoveEmptyCheck", Text = L10n.T("RemoveEmpty"), AutoSize = true, Checked = true, Margin = new Padding(6, 3, 3, 3) };
+            _removeEmptyCheck = new ThemedCheckBox { Name = "RemoveEmptyCheck", Text = L10n.T("RemoveEmpty"), AutoSize = true, Checked = true, Margin = new Padding(6, 3, 3, 3) };
             optionsFlow.Controls.Add(_recycleRadio);
             optionsFlow.Controls.Add(_removeEmptyCheck);
             _otherOptionsPanel.Controls.Add(optionsFlow);
             cleanupLayout.Controls.Add(modeRow, 0, 1);
             cleanupLayout.Controls.Add(_otherOptionsPanel, 0, 2);
 
-            _confirmCheck = new CheckBox
+            _confirmCheck = new ThemedCheckBox
             {
                 Name = "ConfirmCheck",
                 AutoSize = true,
@@ -452,7 +479,7 @@ namespace LegacySift
                 WrapContents = false,
                 Margin = new Padding(0)
             };
-            _cleanupButton = new Button
+            _cleanupButton = new ThemedButton
             {
                 Name = "CleanupButton",
                 Text = L10n.T("Cleanup"),
@@ -463,7 +490,7 @@ namespace LegacySift
                 Padding = new Padding(8, 2, 8, 2)
             };
             _cleanupButton.Click += async (s, e) => await CleanupAsync();
-            _restoreButton = new Button
+            _restoreButton = new ThemedButton
             {
                 Name = "RestoreButton",
                 Text = L10n.T("Restore"),
@@ -512,6 +539,7 @@ namespace LegacySift
             header.Controls.Add(new Label { AutoSize = true, Font = new Font(Font.FontFamily, 10.5F, FontStyle.Bold), Text = title, Margin = new Padding(0, 2, 9, 2) });
             header.Controls.Add(new Label
             {
+                Name = "FolderBadge",
                 AutoSize = true,
                 Font = new Font(Font.FontFamily, 7.8F, FontStyle.Bold),
                 ForeColor = Color.White,
@@ -536,10 +564,18 @@ namespace LegacySift
             layout.Controls.Add(desc, 0, 1);
             layout.SetColumnSpan(desc, 2);
 
-            box = new TextBox { Name = "FolderPath", Dock = DockStyle.Fill, Margin = new Padding(0, 5, 7, 0) };
-            browseButton = new Button { Name = "BrowseButton", Text = L10n.T("Browse"), AutoSize = false, Dock = DockStyle.Fill, Margin = new Padding(4, 3, 0, 0), MinimumSize = new Size(86, 28) };
+            box = new TextBox { Name = "FolderPath", Dock = DockStyle.Fill, BorderStyle = BorderStyle.None, Margin = new Padding(0) };
+            var inputBorder = new ThemedInputBorder
+            {
+                Name = "FolderPathBorder",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 5, 7, 0),
+                Padding = new Padding(2, 6, 2, 1)
+            };
+            inputBorder.Controls.Add(box);
+            browseButton = new ThemedButton { Name = "BrowseButton", Text = L10n.T("Browse"), AutoSize = false, Dock = DockStyle.Fill, Margin = new Padding(4, 3, 0, 0), MinimumSize = new Size(86, 28) };
             browseButton.Click += browseHandler;
-            layout.Controls.Add(box, 0, 2);
+            layout.Controls.Add(inputBorder, 0, 2);
             layout.Controls.Add(browseButton, 1, 2);
             return panel;
         }
@@ -563,6 +599,8 @@ namespace LegacySift
             grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = L10n.T("GridSize"), DataPropertyName = "Size", FillWeight = 10 });
             grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = L10n.T("GridCurrent"), DataPropertyName = "Reference", FillWeight = 32 });
             grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = L10n.T("GridNote"), DataPropertyName = "Note", FillWeight = 30 });
+            grid.RowTemplate.Height = 20;
+            grid.RowTemplate.MinimumHeight = 18;
             grid.CellDoubleClick += (s, e) => OpenSelectedSource((DataGridView)s, e.RowIndex);
             return grid;
         }
@@ -575,6 +613,7 @@ namespace LegacySift
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             layout.Controls.Add(new Label
             {
+                Name = "ResultExplanation",
                 AutoSize = true,
                 Dock = DockStyle.Fill,
                 Text = explanation,

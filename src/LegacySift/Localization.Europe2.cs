@@ -5,7 +5,7 @@ namespace LegacySift
     internal static partial class L10n
     {
         private static readonly Dictionary<string, string> Pl = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — bezpiecznie wyczyść stary folder",
+            "AppTitle", "LegacySift 0.2.3-alpha — bezpiecznie wyczyść stary folder",
             "TabWork", "Porównaj i wyczyść",
             "TabHelp", "Instrukcja i bezpieczeństwo",
             "LanguageButton", "Język…",
@@ -124,7 +124,7 @@ namespace LegacySift
         );
 
         private static readonly Dictionary<string, string> Nl = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — ruim een oude map veilig op",
+            "AppTitle", "LegacySift 0.2.3-alpha — ruim een oude map veilig op",
             "TabWork", "Vergelijken en opruimen",
             "TabHelp", "Handleiding en veiligheid",
             "LanguageButton", "Taal…",
@@ -243,7 +243,7 @@ namespace LegacySift
         );
 
         private static readonly Dictionary<string, string> Tr = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — eski bir klasörü güvenle temizle",
+            "AppTitle", "LegacySift 0.2.3-alpha — eski bir klasörü güvenle temizle",
             "TabWork", "Karşılaştır ve temizle",
             "TabHelp", "Kılavuz ve güvenlik",
             "LanguageButton", "Dil…",
@@ -362,7 +362,7 @@ namespace LegacySift
         );
 
         private static readonly Dictionary<string, string> Uk = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — безпечно очистіть стару папку",
+            "AppTitle", "LegacySift 0.2.3-alpha — безпечно очистіть стару папку",
             "TabWork", "Порівняти й очистити",
             "TabHelp", "Інструкція та безпека",
             "LanguageButton", "Мова…",

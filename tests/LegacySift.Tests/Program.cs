@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -34,6 +35,10 @@ namespace LegacySift.Tests
                 TestAllTranslations();
                 TestCultureMapping();
                 TestSavedLanguageSettings();
+                TestObsoleteThemeSettingsAreIgnored();
+                TestLightPalette();
+                TestNativeLightTitleBar();
+                TestApplicationIcon();
                 TestScriptCoverage();
                 TestLayoutMatrix();
                 TestLanguageDialogLayout();
@@ -166,8 +171,8 @@ namespace LegacySift.Tests
         {
             var english = L10n.TranslationForTests(AppLanguage.English);
             Assert(LanguageCatalog.All.Count == Enum.GetValues(typeof(AppLanguage)).Length, "language catalog must contain every AppLanguage value");
-            Assert(LanguageCatalog.All.Count == 34, "the final 0.2.2-alpha catalog must contain exactly 34 languages");
-            Assert(english.Count == 116, "English baseline must contain the frozen 116-key UI contract");
+            Assert(LanguageCatalog.All.Count == 34, "the 0.2.3-alpha catalog must preserve exactly 34 languages");
+            Assert(english.Count == 116, "English baseline must preserve the 116 frozen workflow keys");
             Assert(LanguageCatalog.All.Select(x => x.Flag).Distinct().Count() == 34, "every supported language must have one cataloged flag");
             Assert(LanguageCatalog.All[0].Language == AppLanguage.English && LanguageCatalog.All[1].Language == AppLanguage.Italian, "English and Italian must remain first for language recovery");
             Assert(LanguageCatalog.All.Skip(2).Select(x => x.EnglishName).SequenceEqual(LanguageCatalog.All.Skip(2).Select(x => x.EnglishName).OrderBy(x => x, StringComparer.Ordinal)), "remaining languages must have a stable English-name alphabetical order");
@@ -236,6 +241,133 @@ namespace LegacySift.Tests
             Assert(L10n.FromCode("in") == AppLanguage.Indonesian, "legacy Indonesian code must remain readable");
             Assert(L10n.FromCode("no") == AppLanguage.NorwegianBokmal, "generic Norwegian code must use Bokmål");
             Assert(L10n.FromCode("nn-NO") == AppLanguage.NorwegianBokmal, "Nynorsk setting must safely use the single Norwegian Bokmål UI");
+        }
+
+        private static void TestObsoleteThemeSettingsAreIgnored()
+        {
+            foreach (var obsolete in new[] { "theme=dark", "theme=light", "theme=system", "theme=unknown" })
+            {
+                var lines = new[] { obsolete, "language=it" };
+                Assert(SettingsStore.ParseLanguageSetting(lines, AppLanguage.English) == AppLanguage.Italian,
+                    obsolete + " must not prevent the saved language from loading");
+            }
+            Assert(!SettingsStore.SerializeLanguageSetting(AppLanguage.Italian).Contains("theme="),
+                "new settings output must remove the obsolete theme preference");
+        }
+
+        private static void TestLightPalette()
+        {
+            var light = ThemeManager.CurrentPalette;
+            Assert(light.OldSurface != light.CurrentSurface, "light OLD and CURRENT surfaces must remain distinguishable");
+            Assert(ContrastRatio(light.Text, light.Surface) >= 4.5, "light primary text must meet WCAG AA contrast on cards");
+            Assert(ContrastRatio(light.SecondaryText, light.Surface) >= 4.5, "light secondary text must meet WCAG AA contrast on cards");
+            Assert(ContrastRatio(light.SelectionText, light.Selection) >= 4.5, "light selected grid text must meet WCAG AA contrast");
+            Assert(ContrastRatio(light.DisabledText, light.SecondarySurface) >= 3.0, "light disabled text must remain distinguishable");
+            Assert(light.AppBackground == Color.FromArgb(245, 247, 250), "application background must preserve the approved Light base");
+            Assert(light.Surface == Color.White, "card surfaces must preserve the approved Light base");
+            Assert(light.Primary == Color.FromArgb(22, 136, 248), "primary actions must preserve the approved Light blue");
+        }
+
+        private static void TestNativeLightTitleBar()
+        {
+            L10n.SetLanguage(AppLanguage.English);
+            using (var form = new MainForm())
+            {
+                form.PrepareLayoutTest(LayoutTestState.Initial, new Size(1144, 673), 1F);
+                var handle = form.Handle;
+                var clientSize = form.ClientSize;
+                var icon = form.Icon;
+                var before = ThemeManager.TitleBarApplyCount;
+
+                ThemeManager.ApplyTo(form);
+                Application.DoEvents();
+                Assert(ThemeManager.TitleBarApplyCount > before, "applying Light styling must update the native title bar");
+                Assert(ThemeManager.LastTitleBarHandle == handle && form.Handle == handle, "title-bar styling must not recreate the main form handle");
+                Assert(form.ClientSize == clientSize, "title-bar styling must not change the main client layout");
+                Assert(form.Icon != null && form.Icon == icon, "title-bar styling must preserve the assigned application icon");
+            }
+        }
+
+        private static double ContrastRatio(Color foreground, Color background)
+        {
+            var lighter = Math.Max(RelativeLuminance(foreground), RelativeLuminance(background));
+            var darker = Math.Min(RelativeLuminance(foreground), RelativeLuminance(background));
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        private static double RelativeLuminance(Color color)
+        {
+            Func<byte, double> channel = value =>
+            {
+                var normalized = value / 255.0;
+                return normalized <= 0.03928 ? normalized / 12.92 : Math.Pow((normalized + 0.055) / 1.055, 2.4);
+            };
+            return 0.2126 * channel(color.R) + 0.7152 * channel(color.G) + 0.0722 * channel(color.B);
+        }
+
+        private static void TestApplicationIcon()
+        {
+            using (var stream = typeof(MainForm).Assembly.GetManifestResourceStream(AppIcon.ResourceName))
+                Assert(stream != null && stream.Length > 0, "application icon must be embedded with its stable resource name");
+
+            using (var icon = AppIcon.CreateIcon())
+            using (var bitmap = AppIcon.CreateBitmap(24))
+            {
+                Assert(icon != null, "application icon must be loadable by WinForms");
+                Assert(bitmap.Width == 24 && bitmap.Height == 24, "application icon must render at the compact header size");
+            }
+
+            var iconPath = FindRepositoryFile(Path.Combine("src", "LegacySift", "Assets", "legacysift-icon.ico"));
+            var sizes = new HashSet<int>();
+            using (var reader = new BinaryReader(File.OpenRead(iconPath)))
+            {
+                Assert(reader.ReadUInt16() == 0, "ICO reserved header must be zero");
+                Assert(reader.ReadUInt16() == 1, "application asset must be an ICO container");
+                var count = reader.ReadUInt16();
+                Assert(count >= 7, "application ICO must contain at least seven size entries");
+                for (var i = 0; i < count; i++)
+                {
+                    var width = reader.ReadByte();
+                    var height = reader.ReadByte();
+                    reader.ReadBytes(14);
+                    var resolvedWidth = width == 0 ? 256 : width;
+                    var resolvedHeight = height == 0 ? 256 : height;
+                    Assert(resolvedWidth == resolvedHeight, "every application icon frame must be square");
+                    sizes.Add(resolvedWidth);
+                }
+            }
+            foreach (var expected in new[] { 16, 24, 32, 48, 64, 128, 256 })
+                Assert(sizes.Contains(expected), "application ICO must include a " + expected + "px frame");
+
+            var sourcePath = FindRepositoryFile(Path.Combine("src", "LegacySift", "Assets", "legacysift-icon-source.png"));
+            var documentedSourcePath = FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-icon-source.png"));
+            using (var source = Image.FromFile(sourcePath))
+            {
+                Assert(source.Width == 1254 && source.Height == 1254, "official icon source must preserve its supplied 1254px canvas");
+                Assert(source.RawFormat.Guid == ImageFormat.Png.Guid, "official icon source must remain PNG");
+            }
+            const string officialSourceSha256 = "6651f976bc5ce8f4f84d83f2efccb384f836abb788b9ef9bc2b4653ec68d290d";
+            Assert(Sha256(sourcePath) == officialSourceSha256, "project icon source must be byte-identical to the supplied official artwork");
+            Assert(Sha256(documentedSourcePath) == officialSourceSha256, "documentation icon source must be byte-identical to the supplied official artwork");
+            Assert(BytesEqual(File.ReadAllBytes(sourcePath), File.ReadAllBytes(documentedSourcePath)), "project and documentation icon sources must be byte-identical");
+            foreach (var expected in new[] { 16, 24, 32, 48, 64, 128, 256 })
+            {
+                var pngPath = FindRepositoryFile(Path.Combine("docs", "assets", "icon-sizes", "legacysift-icon-" + expected + ".png"));
+                using (var image = Image.FromFile(pngPath))
+                    Assert(image.Width == expected && image.Height == expected, "documentation icon must preserve the " + expected + "px size");
+            }
+
+            Assert(File.Exists(FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-icon-qa.png"))), "actual-size icon QA contact sheet must be checked in");
+            Assert(File.Exists(FindRepositoryFile(Path.Combine("docs", "assets", "legacysift-logo-light.png"))), "cropped full logo asset must be checked in");
+            Assert(!File.Exists(Path.Combine(Path.GetDirectoryName(sourcePath), "legacysift-icon.svg")), "retired application icon SVG must be absent");
+            Assert(!File.Exists(Path.Combine(Path.GetDirectoryName(documentedSourcePath), "legacysift-mark.svg")), "retired alternate icon mark must be absent");
+        }
+
+        private static string Sha256(string path)
+        {
+            using (var stream = File.OpenRead(path))
+            using (var algorithm = SHA256.Create())
+                return BitConverter.ToString(algorithm.ComputeHash(stream)).Replace("-", string.Empty).ToLowerInvariant();
         }
 
         private static void TestScriptCoverage()
@@ -370,11 +502,11 @@ namespace LegacySift.Tests
                     form.PerformLayout();
                     Application.DoEvents();
                 }
-                var prefix = info.Code + " " + configuration.Name + " " + state + ": ";
+                var prefix = "Light " + info.Code + " " + configuration.Name + " " + state + ": ";
                 var required = new[]
                 {
-                    "LanguageButton", "MainTabs", "WorkPage", "OldPanel", "CurrentPanel", "OldBrowseButton",
-                    "CurrentBrowseButton", "AnalyzeButton", "ResultsTabs", "CleanupGroup", "CleanupExplanation", "SafetyFolderRadio",
+                    "HeaderMark", "LanguageButton", "MainTabs", "WorkPage", "OldPanel", "CurrentPanel", "OldBrowseButton",
+                    "CurrentBrowseButton", "AnalyzeButton", "CancelButton", "ReportButton", "ProgressBar", "ResultsTabs", "CleanupGroup", "CleanupExplanation", "SafetyFolderRadio",
                     "ConfirmCheck", "CleanupButton", "RestoreButton", "ProtectedReminder", "SummaryLabel", "HelpText"
                 };
                 foreach (var name in required)
@@ -399,21 +531,67 @@ namespace LegacySift.Tests
                 Assert(LabelTextFits((Label)Find(form, "CleanupExplanation")), prefix + "cleanup explanation must fit");
                 Assert(LabelTextFits((Label)Find(form, "ProtectedReminder")), prefix + "protected reminder must fit");
                 Assert(Find(form, "HelpText").Text.Length > 300, prefix + "guide and safety text must be present");
+                Assert(form.Icon != null, prefix + "window and taskbar icon must be assigned");
+                Assert(Find(form, "ThemeButton") == null, prefix + "the removed Theme selector must not be present");
+
+                var palette = ThemeManager.CurrentPalette;
+                Assert(Find(form, "WorkPage").BackColor == palette.AppBackground, prefix + "work page must use the active application surface");
+                Assert(Find(form, "OldPanel").BackColor == palette.OldSurface, prefix + "OLD panel must use the active semantic surface");
+                Assert(Find(form, "CurrentPanel").BackColor == palette.CurrentSurface, prefix + "CURRENT panel must use the active semantic surface");
+                Assert(Find(form, "MainTabs") is ThemedTabControl, prefix + "main navigation must use the focus-aware themed tab control");
+                Assert(Find(form, "ResultsTabs") is ThemedTabControl, prefix + "result navigation must use the focus-aware themed tab control");
+                foreach (var buttonName in new[] { "LanguageButton", "OldBrowseButton", "CurrentBrowseButton", "AnalyzeButton", "CancelButton", "ReportButton", "CleanupButton", "RestoreButton" })
+                    Assert(Find(form, buttonName) is ThemedButton, prefix + buttonName + " must use Light-palette disabled rendering");
+                Assert(Find(form, "ConfirmCheck") is ThemedCheckBox, prefix + "confirmation must use Light-palette disabled rendering");
+                Assert(Find(form, "ProgressBar") is ThemedProgressBar, prefix + "progress must use the Light palette");
+                Assert(Find(form, "CleanupGroup") is ThemedGroupBox, prefix + "cleanup must use the integrated Light section renderer");
+                foreach (var pathName in new[] { "OldPath", "CurrentPath" })
+                {
+                    var path = (TextBox)Find(form, pathName);
+                    Assert(path.BorderStyle == BorderStyle.None, prefix + pathName + " must not retain a bright native frame");
+                    Assert(path.Parent is ThemedInputBorder, prefix + pathName + " must use the focus-aware subtle border host");
+                }
+                foreach (var gridName in new[] { "UniqueGrid", "VersionGrid", "DuplicateGrid", "ErrorGrid" })
+                {
+                    var grid = (DataGridView)Find(form, gridName);
+                    Assert(grid.BorderStyle == BorderStyle.FixedSingle, prefix + gridName + " must preserve the approved Light outer border");
+                    Assert(grid.ColumnHeadersBorderStyle == DataGridViewHeaderBorderStyle.Single, prefix + gridName + " must preserve the approved Light header border");
+                }
+                var mainTabs = (TabControl)Find(form, "MainTabs");
+                var resultsTabs = (TabControl)Find(form, "ResultsTabs");
+                Assert(TabTextFits(mainTabs), prefix + "main tab labels must remain fully visible; " + DescribeTabMetrics(mainTabs));
+                Assert(TabTextFits(resultsTabs), prefix + "result tab labels must remain fully visible; " + DescribeTabMetrics(resultsTabs));
+
+                foreach (var buttonName in new[] { "LanguageButton", "OldBrowseButton", "CurrentBrowseButton", "AnalyzeButton", "CleanupButton", "RestoreButton" })
+                {
+                    var button = (Button)Find(form, buttonName);
+                    Assert(button.FlatStyle == FlatStyle.Flat && button.FlatAppearance.BorderSize == 1, prefix + buttonName + " must preserve a visible non-color boundary");
+                    Assert(button.TabStop, prefix + buttonName + " must remain keyboard-focusable");
+                }
 
                 if (state == LayoutTestState.AnalysisCompleted && configuration.Name == "1366x768@100")
                 {
                     var grid = (DataGridView)Find(form, "UniqueGrid");
-                    var usefulMinimum = grid.ColumnHeadersHeight + grid.RowTemplate.Height * 3;
+                    var usefulMinimum = grid.ColumnHeadersHeight + grid.RowTemplate.Height * 4;
                     if (info.Language == AppLanguage.English)
                     {
                         var allocationNames = new[] { "IntroLabel", "FolderPair", "CheckArea", "SummaryPanel", "ResultsTabs", "CleanupGroup" };
-                        Console.WriteLine("LAYOUT_ALLOCATION " + string.Join(" ", allocationNames.Select(name => name + "=" + BoundsInForm(Find(form, name), form))));
+                        Console.WriteLine("LAYOUT_ALLOCATION theme=Light " + string.Join(" ", allocationNames.Select(name => name + "=" + BoundsInForm(Find(form, name), form))));
                     }
                     Assert(grid.Rows.Count >= 4, prefix + "test data must expose at least four actual result rows");
-                    Assert(grid.ClientSize.Height >= usefulMinimum, prefix + "result grid must show its header and at least three data rows; height=" + grid.ClientSize.Height + ", minimum=" + usefulMinimum);
-                    Assert(grid.DisplayedRowCount(false) >= 3, prefix + "at least three result rows must be visibly displayed");
+                    var rowTextHeight = TextRenderer.MeasureText("Ag", grid.Font).Height;
+                    Assert(grid.RowTemplate.Height >= rowTextHeight + 2, prefix + "compact result rows must retain vertical text breathing room");
+                    if (grid.ClientSize.Height < usefulMinimum)
+                    {
+                        Console.WriteLine("LAYOUT_SHORT " + prefix +
+                                          " results=" + resultBounds +
+                                          " explanation=" + BoundsInForm(Find(form, "ResultExplanation"), form) +
+                                          " tabs=" + DescribeTabMetrics((TabControl)Find(form, "ResultsTabs")));
+                    }
+                    Assert(grid.ClientSize.Height >= usefulMinimum, prefix + "result grid must show its header and at least four data rows; height=" + grid.ClientSize.Height + ", minimum=" + usefulMinimum);
+                    Assert(grid.DisplayedRowCount(false) >= 4, prefix + "at least four result rows must be visibly displayed");
                     if (info.Language == AppLanguage.English)
-                        Console.WriteLine("LAYOUT_METRIC constrained-grid-height=" + grid.ClientSize.Height + " displayed-rows=" + grid.DisplayedRowCount(false) + " cleanup-height=" + Find(form, "CleanupGroup").Height);
+                        Console.WriteLine("LAYOUT_METRIC theme=Light constrained-grid-height=" + grid.ClientSize.Height + " displayed-rows=" + grid.DisplayedRowCount(false) + " cleanup-height=" + Find(form, "CleanupGroup").Height);
                 }
 
                 if (state == LayoutTestState.OtherOptionsExpanded)
@@ -429,57 +607,123 @@ namespace LegacySift.Tests
         {
             foreach (var current in LanguageCatalog.All)
             {
+                L10n.SetLanguage(current.Language);
                 using (var dialog = new LanguageDialog(current.Language))
                 {
+                    var prefix = "Light " + current.Code + ": ";
                     dialog.CreateControl();
                     dialog.Show();
                     Application.DoEvents();
+                    ThemeManager.ApplyTo(dialog);
                     dialog.PerformLayout();
                     var choices = dialog.Controls.Find("LanguageList", true)[0].Controls.OfType<RadioButton>().ToList();
-                    Assert(choices.Count == 34, current.Code + " language dialog must contain 34 choices");
+                    Assert(choices.Count == 34, prefix + "language dialog must contain 34 choices");
                     foreach (var choice in choices)
                     {
-                        Assert(choice.Width > 250 && choice.Height >= 30, current.Code + " language choice must have usable bounds: " + choice.Name);
+                        Assert(choice.Width > 250 && choice.Height >= 30, prefix + "language choice must have usable bounds: " + choice.Name);
                         var measured = TextRenderer.MeasureText(choice.Text, choice.Font).Width + 55;
-                        Assert(measured <= choice.ClientSize.Width + 8, current.Code + " language choice text must fit: " + choice.Name);
+                        Assert(measured <= choice.ClientSize.Width + 8, prefix + "language choice text must fit: " + choice.Name);
                     }
-                    Assert(choices.Any(x => x.Name == "LanguageChoice_IT"), current.Code + " dialog must always expose Italian");
-                    Assert(choices.Any(x => x.Name == "LanguageChoice_EN"), current.Code + " dialog must always expose English");
-                    Assert(choices[0].Name == "LanguageChoice_EN" && choices[1].Name == "LanguageChoice_IT", current.Code + " dialog must keep recovery languages first");
+                    Assert(choices.Any(x => x.Name == "LanguageChoice_IT"), prefix + "dialog must always expose Italian");
+                    Assert(choices.Any(x => x.Name == "LanguageChoice_EN"), prefix + "dialog must always expose English");
+                    Assert(choices[0].Name == "LanguageChoice_EN" && choices[1].Name == "LanguageChoice_IT", prefix + "dialog must keep recovery languages first");
+                    Assert(dialog.Icon != null, prefix + "language dialog must use the application icon");
+                    Assert(dialog.BackColor == ThemeManager.CurrentPalette.AppBackground, prefix + "language dialog must use the Light palette");
                     var scroll = (ScrollableControl)dialog.Controls.Find("LanguageScroll", true)[0];
                     var last = choices.Last();
                     scroll.ScrollControlIntoView(last);
                     Application.DoEvents();
-                    Assert(last.Bottom + scroll.AutoScrollPosition.Y <= scroll.ClientSize.Height + 8, current.Code + " final language entry must be reachable by scrolling");
-                }
-            }
-        }
-
-        private static void CaptureRepresentativeLayouts(string outputDirectory)
-        {
-            Directory.CreateDirectory(outputDirectory);
-            var languages = new[]
-            {
-                AppLanguage.Italian, AppLanguage.German, AppLanguage.Ukrainian,
-                AppLanguage.ChineseSimplified, AppLanguage.Hindi, AppLanguage.Korean,
-                AppLanguage.Bengali, AppLanguage.Thai, AppLanguage.Lithuanian
-            };
-            foreach (var language in languages)
-            {
-                L10n.SetLanguage(language);
-                using (var form = new MainForm())
-                {
-                    form.PrepareLayoutTest(LayoutTestState.AnalysisCompleted, new Size(1144, 673), 1F);
-                    using (var image = form.CaptureLayoutTestImage())
-                        image.Save(Path.Combine(outputDirectory, L10n.ToCode(language).Replace("-", "_") + "-1366x768-100.png"), ImageFormat.Png);
+                    Assert(last.Bottom + scroll.AutoScrollPosition.Y <= scroll.ClientSize.Height + 8, prefix + "final language entry must be reachable by scrolling");
                 }
             }
             L10n.SetLanguage(AppLanguage.English);
         }
 
+        private static void CaptureRepresentativeLayouts(string outputDirectory)
+        {
+            Directory.CreateDirectory(outputDirectory);
+            CaptureLightLayouts(outputDirectory, new[]
+            {
+                AppLanguage.Italian, AppLanguage.German, AppLanguage.Ukrainian,
+                AppLanguage.ChineseSimplified, AppLanguage.Hindi, AppLanguage.Korean,
+                AppLanguage.Bengali, AppLanguage.Thai, AppLanguage.Lithuanian
+            });
+            CaptureLayout(outputDirectory, AppLanguage.Italian, LayoutTestState.Initial);
+            CaptureLayout(outputDirectory, AppLanguage.Italian, LayoutTestState.AnalysisRunning);
+
+            CaptureTitleBarLayouts(outputDirectory);
+
+            L10n.SetLanguage(AppLanguage.English);
+        }
+
+        private static void CaptureLightLayouts(string outputDirectory, IEnumerable<AppLanguage> languages)
+        {
+            foreach (var language in languages)
+                CaptureLayout(outputDirectory, language, LayoutTestState.AnalysisCompleted);
+        }
+
+        private static void CaptureLayout(string outputDirectory, AppLanguage language, LayoutTestState state)
+        {
+            L10n.SetLanguage(language);
+            using (var form = new MainForm())
+            {
+                form.PrepareLayoutTest(state, new Size(1144, 673), 1F);
+                using (var image = form.CaptureLayoutTestImage())
+                {
+                    var fileName = "light-" + L10n.ToCode(language).Replace("-", "_") + "-" +
+                                   state.ToString().ToLowerInvariant() + "-1366x768-100.png";
+                    image.Save(Path.Combine(outputDirectory, fileName), ImageFormat.Png);
+                }
+            }
+        }
+
+        private static void CaptureTitleBarLayouts(string outputDirectory)
+        {
+            L10n.SetLanguage(AppLanguage.Italian);
+            using (var form = new MainForm())
+            using (var focusSink = new Form())
+            {
+                form.PrepareLayoutTest(LayoutTestState.AnalysisCompleted, new Size(900, 610), 1F);
+                form.StartPosition = FormStartPosition.Manual;
+                form.Location = new Point(40, 40);
+                form.Activate();
+                Application.DoEvents();
+
+                CaptureTitleBar(outputDirectory, form, "titlebar-light-active.png");
+                focusSink.ShowInTaskbar = false;
+                focusSink.FormBorderStyle = FormBorderStyle.FixedToolWindow;
+                focusSink.StartPosition = FormStartPosition.Manual;
+                focusSink.Bounds = new Rectangle(10, 680, 180, 60);
+                focusSink.Show();
+                focusSink.Activate();
+                Application.DoEvents();
+                CaptureTitleBar(outputDirectory, form, "titlebar-light-inactive.png");
+            }
+        }
+
+        private static void CaptureTitleBar(string outputDirectory, MainForm form, string fileName)
+        {
+            using (var image = form.CaptureTitleBarTestImage())
+                image.Save(Path.Combine(outputDirectory, fileName), ImageFormat.Png);
+        }
+
         private static Control Find(Control root, string name)
         {
             return root.Controls.Find(name, true).FirstOrDefault();
+        }
+
+        private static string FindRepositoryFile(string relativePath)
+        {
+            foreach (var start in new[] { Directory.GetCurrentDirectory(), AppDomain.CurrentDomain.BaseDirectory })
+            {
+                var directory = new DirectoryInfo(start);
+                for (var depth = 0; directory != null && depth < 10; depth++, directory = directory.Parent)
+                {
+                    var candidate = Path.Combine(directory.FullName, relativePath);
+                    if (File.Exists(candidate)) return candidate;
+                }
+            }
+            throw new FileNotFoundException("Could not locate repository file", relativePath);
         }
 
         private static bool IsInsideForm(Form form, Control control, int tolerance)
@@ -513,6 +757,32 @@ namespace LegacySift.Tests
             var proposed = new Size(System.Math.Max(1, label.ClientSize.Width), int.MaxValue);
             var measured = TextRenderer.MeasureText(label.Text ?? string.Empty, label.Font, proposed, TextFormatFlags.WordBreak);
             return measured.Height <= label.ClientSize.Height + 8;
+        }
+
+        private static bool TabTextFits(TabControl tabs)
+        {
+            for (var index = 0; index < tabs.TabPages.Count; index++)
+            {
+                var bounds = tabs.GetTabRect(index);
+                var measured = MeasureTabText(tabs.TabPages[index].Text, tabs.Font);
+                if (bounds.Right > tabs.ClientSize.Width + 2 || measured > bounds.Width) return false;
+            }
+            return true;
+        }
+
+        private static string DescribeTabMetrics(TabControl tabs)
+        {
+            return string.Join(", ", tabs.TabPages.Cast<TabPage>().Select((page, index) =>
+            {
+                var bounds = tabs.GetTabRect(index);
+                var measured = MeasureTabText(page.Text, tabs.Font);
+                return page.Text + " measured=" + measured + " bounds=" + bounds;
+            }));
+        }
+
+        private static int MeasureTabText(string text, Font font)
+        {
+            return TextRenderer.MeasureText(text ?? string.Empty, font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.SingleLine | TextFormatFlags.NoPadding).Width;
         }
 
         private sealed class LayoutConfiguration

@@ -10,6 +10,7 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\legacysift-icon.ico</ApplicationIcon>
     <LangVersion>7.3</LangVersion>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
@@ -39,6 +40,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="AppIcon.cs" />
+    <Compile Include="ThemeManager.cs" />
+    <Compile Include="ThemedControls.cs" />
+    <Compile Include="ThemedTabControl.cs" />
     <Compile Include="Localization.cs" />
     <Compile Include="Localization.Base.cs" />
     <Compile Include="Localization.ExtraSupport.cs" />
@@ -81,6 +86,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Assets\legacysift-icon.ico">
+      <LogicalName>LegacySift.Assets.legacysift-icon.ico</LogicalName>
+    </EmbeddedResource>
+    <None Include="Assets\legacysift-icon-source.png" />
     <None Include="App.config" />
     <None Include="app.manifest" />
   </ItemGroup>

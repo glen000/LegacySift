@@ -30,6 +30,8 @@ namespace LegacySift
         {
             try
             {
+                // Rewriting only the supported language preference also
+                // removes obsolete theme=* lines from development builds.
                 File.WriteAllText(SettingsPath, SerializeLanguageSetting(language));
             }
             catch { }
@@ -50,5 +52,6 @@ namespace LegacySift
         {
             return "language=" + L10n.ToCode(language) + "\r\n";
         }
+
     }
 }

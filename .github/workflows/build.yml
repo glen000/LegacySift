@@ -45,11 +45,23 @@ jobs:
           "$zipHash  LegacySift-windows.zip" | Set-Content LegacySift-windows.zip.sha256 -Encoding ascii
           Write-Host "Portable ZIP SHA256: $zipHash"
           Add-Type -AssemblyName System.Drawing
-          Get-ChildItem layout-screenshots\*.png | Sort-Object Name | ForEach-Object {
+          $exeIcon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path dist\LegacySift.exe))
+          if ($null -eq $exeIcon) { throw 'Packaged executable does not expose an application icon.' }
+          try { Write-Host "Packaged EXE icon: $($exeIcon.Width)x$($exeIcon.Height)" }
+          finally { $exeIcon.Dispose() }
+          $screenshots = @(Get-ChildItem layout-screenshots\*.png | Sort-Object Name)
+          if ($screenshots.Count -lt 13) { throw "Expected at least 13 Light client and title-bar screenshots; found $($screenshots.Count)." }
+          @('titlebar-light-active.png', 'titlebar-light-inactive.png') | ForEach-Object {
+            if (-not (Test-Path (Join-Path 'layout-screenshots' $_))) { throw "Missing required title-bar screenshot: $_" }
+          }
+          $screenshots | ForEach-Object {
             $image = [System.Drawing.Image]::FromFile($_.FullName)
             try { Write-Host "Layout screenshot: $($_.Name) $($image.Width)x$($image.Height) ($($_.Length) bytes)" }
             finally { $image.Dispose() }
           }
+          $qa = [System.Drawing.Image]::FromFile((Resolve-Path docs\assets\legacysift-icon-qa.png))
+          try { Write-Host "Icon QA contact sheet: $($qa.Width)x$($qa.Height)" }
+          finally { $qa.Dispose() }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -59,3 +71,7 @@ jobs:
             LegacySift-windows.zip
             LegacySift-windows.zip.sha256
             layout-screenshots\*.png
+            docs\assets\legacysift-icon-qa.png
+            docs\assets\legacysift-icon-source.png
+            docs\assets\legacysift-logo-light.png
+            docs\assets\icon-sizes\*.png

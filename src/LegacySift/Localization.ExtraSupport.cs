@@ -18,43 +18,45 @@ namespace LegacySift
 
         private static Dictionary<string, string> GetDictionary(AppLanguage language)
         {
+            Dictionary<string, string> dictionary;
             switch (language)
             {
-                case AppLanguage.Italian: return It;
-                case AppLanguage.German: return De;
-                case AppLanguage.French: return Fr;
-                case AppLanguage.Spanish: return Es;
-                case AppLanguage.Portuguese: return Pt;
-                case AppLanguage.Polish: return Pl;
-                case AppLanguage.Dutch: return Nl;
-                case AppLanguage.Turkish: return Tr;
-                case AppLanguage.Ukrainian: return Uk;
-                case AppLanguage.ChineseSimplified: return ZhHans;
-                case AppLanguage.Japanese: return Ja;
-                case AppLanguage.Hindi: return Hi;
-                case AppLanguage.Romanian: return Ro;
-                case AppLanguage.Czech: return Cs;
-                case AppLanguage.Greek: return El;
-                case AppLanguage.Hungarian: return Hu;
-                case AppLanguage.Swedish: return Sv;
-                case AppLanguage.Korean: return Ko;
-                case AppLanguage.Indonesian: return Id;
-                case AppLanguage.Vietnamese: return Vi;
-                case AppLanguage.Danish: return Da;
-                case AppLanguage.NorwegianBokmal: return Nb;
-                case AppLanguage.Finnish: return Fi;
-                case AppLanguage.Slovak: return Sk;
-                case AppLanguage.Bulgarian: return Bg;
-                case AppLanguage.Croatian: return Hr;
-                case AppLanguage.Bengali: return Bn;
-                case AppLanguage.Thai: return Th;
-                case AppLanguage.Malay: return Ms;
-                case AppLanguage.Filipino: return Fil;
-                case AppLanguage.Estonian: return Et;
-                case AppLanguage.Latvian: return Lv;
-                case AppLanguage.Lithuanian: return Lt;
-                default: return En;
+                case AppLanguage.Italian: dictionary = It; break;
+                case AppLanguage.German: dictionary = De; break;
+                case AppLanguage.French: dictionary = Fr; break;
+                case AppLanguage.Spanish: dictionary = Es; break;
+                case AppLanguage.Portuguese: dictionary = Pt; break;
+                case AppLanguage.Polish: dictionary = Pl; break;
+                case AppLanguage.Dutch: dictionary = Nl; break;
+                case AppLanguage.Turkish: dictionary = Tr; break;
+                case AppLanguage.Ukrainian: dictionary = Uk; break;
+                case AppLanguage.ChineseSimplified: dictionary = ZhHans; break;
+                case AppLanguage.Japanese: dictionary = Ja; break;
+                case AppLanguage.Hindi: dictionary = Hi; break;
+                case AppLanguage.Romanian: dictionary = Ro; break;
+                case AppLanguage.Czech: dictionary = Cs; break;
+                case AppLanguage.Greek: dictionary = El; break;
+                case AppLanguage.Hungarian: dictionary = Hu; break;
+                case AppLanguage.Swedish: dictionary = Sv; break;
+                case AppLanguage.Korean: dictionary = Ko; break;
+                case AppLanguage.Indonesian: dictionary = Id; break;
+                case AppLanguage.Vietnamese: dictionary = Vi; break;
+                case AppLanguage.Danish: dictionary = Da; break;
+                case AppLanguage.NorwegianBokmal: dictionary = Nb; break;
+                case AppLanguage.Finnish: dictionary = Fi; break;
+                case AppLanguage.Slovak: dictionary = Sk; break;
+                case AppLanguage.Bulgarian: dictionary = Bg; break;
+                case AppLanguage.Croatian: dictionary = Hr; break;
+                case AppLanguage.Bengali: dictionary = Bn; break;
+                case AppLanguage.Thai: dictionary = Th; break;
+                case AppLanguage.Malay: dictionary = Ms; break;
+                case AppLanguage.Filipino: dictionary = Fil; break;
+                case AppLanguage.Estonian: dictionary = Et; break;
+                case AppLanguage.Latvian: dictionary = Lv; break;
+                case AppLanguage.Lithuanian: dictionary = Lt; break;
+                default: dictionary = En; break;
             }
+            return dictionary;
         }
     }
 }

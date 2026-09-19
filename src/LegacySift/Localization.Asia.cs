@@ -5,7 +5,7 @@ namespace LegacySift
     internal static partial class L10n
     {
         private static readonly Dictionary<string, string> ZhHans = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — 安全清理旧文件夹",
+            "AppTitle", "LegacySift 0.2.3-alpha — 安全清理旧文件夹",
             "TabWork", "比较并清理",
             "TabHelp", "指南与安全",
             "LanguageButton", "语言…",
@@ -124,7 +124,7 @@ namespace LegacySift
         );
 
         private static readonly Dictionary<string, string> Ja = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — 古いフォルダーを安全に整理",
+            "AppTitle", "LegacySift 0.2.3-alpha — 古いフォルダーを安全に整理",
             "TabWork", "比較して整理",
             "TabHelp", "ガイドと安全性",
             "LanguageButton", "言語…",
@@ -243,7 +243,7 @@ namespace LegacySift
         );
 
         private static readonly Dictionary<string, string> Hi = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — पुराने फ़ोल्डर को सुरक्षित रूप से साफ़ करें",
+            "AppTitle", "LegacySift 0.2.3-alpha — पुराने फ़ोल्डर को सुरक्षित रूप से साफ़ करें",
             "TabWork", "तुलना करें और साफ़ करें",
             "TabHelp", "मार्गदर्शिका और सुरक्षा",
             "LanguageButton", "भाषा…",

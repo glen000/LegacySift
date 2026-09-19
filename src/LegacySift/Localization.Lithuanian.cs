@@ -5,7 +5,7 @@ namespace LegacySift
     internal static partial class L10n
     {
         private static readonly Dictionary<string, string> Lt = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — saugus seno aplanko valymas",
+            "AppTitle", "LegacySift 0.2.3-alpha — saugus seno aplanko valymas",
             "TabWork", "Palyginti ir išvalyti",
             "TabHelp", "Instrukcijos ir saugumas",
             "LanguageButton", "Kalba...",

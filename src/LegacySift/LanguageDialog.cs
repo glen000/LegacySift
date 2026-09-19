@@ -28,6 +28,7 @@ namespace LegacySift
             // Intentionally not localized. If someone selects an unfamiliar language,
             // this dialog must always remain easy to find and understand.
             Text = "Language / Lingua";
+            Icon = AppIcon.CreateIcon();
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -130,14 +131,15 @@ namespace LegacySift
                 AutoSize = true,
                 Margin = new Padding(0, 12, 0, 0)
             };
-            var ok = new Button { Name = "LanguageOk", Text = "OK", DialogResult = DialogResult.OK, AutoSize = true, MinimumSize = new Size(90, 32) };
-            var cancel = new Button { Name = "LanguageCancel", Text = "Cancel / Annulla", DialogResult = DialogResult.Cancel, AutoSize = true, MinimumSize = new Size(130, 32) };
+            var ok = new ThemedButton { Name = "LanguageOk", Text = "OK", DialogResult = DialogResult.OK, AutoSize = true, MinimumSize = new Size(90, 32) };
+            var cancel = new ThemedButton { Name = "LanguageCancel", Text = "Cancel / Annulla", DialogResult = DialogResult.Cancel, AutoSize = true, MinimumSize = new Size(130, 32) };
             buttons.Controls.Add(ok);
             buttons.Controls.Add(cancel);
             root.Controls.Add(buttons, 0, 3);
 
             AcceptButton = ok;
             CancelButton = cancel;
+            ThemeManager.ApplyTo(this);
         }
 
         protected override void Dispose(bool disposing)

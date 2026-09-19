@@ -6,12 +6,13 @@ The test executable builds real WinForms controls for all 34 languages and exerc
 
 1. initial state;
 2. folders selected;
-3. analysis complete with missing files, possible versions, exact duplicates and an unchecked file;
-4. cleanup ready;
-5. cleanup confirmed;
-6. other cleanup options expanded;
-7. language dialog with all 34 entries in a constrained scrollable list;
-8. guide/safety tab content present through its normal scrollable text view.
+3. analysis in progress;
+4. analysis complete with missing files, possible versions, exact duplicates and an unchecked file;
+5. cleanup ready;
+6. cleanup confirmed;
+7. other cleanup options expanded;
+8. language dialog with all 34 entries in a constrained scrollable list;
+9. guide/safety tab content present through its normal scrollable text view.
 
 Programmatic layout matrix:
 
@@ -25,6 +26,15 @@ Programmatic layout matrix:
 | 1920×1080 | 1724×1001 | programmatic 150% approximation |
 | 2560×1440 | 1724×1051 | programmatic 150% approximation |
 
-The harness checks non-zero bounds, containment of critical controls, OLD/CURRENT and Browse-button separation, critical button text measurement, language-row text fit, dictionary completeness, placeholders, safety vocabulary and script/diacritic preservation. In the constrained analysis-complete state it also requires the active result grid to display its header plus at least three real data rows while every cleanup control remains visible. Tolerances avoid one-pixel font-rendering failures.
+Every configuration and operational state is exercised in the single shipped Light style. The harness checks non-zero bounds, containment of critical controls, OLD/CURRENT and Browse-button separation, critical button and tab text measurement, keyboard focusability, Light surfaces, icon assignment, language-choice text fit, dictionary completeness, placeholders, safety vocabulary and script/diacritic preservation. In the constrained analysis-complete state it also requires the active result grid to display its header plus at least four real data rows while every cleanup control remains visible. Tolerances avoid one-pixel font-rendering failures.
 
-The 125% and 150% cases are explicit programmatic scaling/font-pressure approximations. They do not claim that a physical Windows monitor was switched to those DPI settings. CI uses real WinForms rendering and programmatically captures Italian, German, Ukrainian, Simplified Chinese, Hindi, Korean, Bengali, Thai and Lithuanian at the constrained 1366×768 reference size. Final physical DPI and native-speaker glyph/wording appearance should be spot-checked on Windows before a stable release.
+The 125% and 150% cases are explicit programmatic scaling/font-pressure approximations. They do not claim that a physical Windows monitor was switched to those DPI settings. CI uses real WinForms rendering at the constrained 1366×768 reference size and captures:
+
+- Italian initial state;
+- Italian analysis in progress, including the active progress bar and disabled actions;
+- analysis-complete views in Italian, German, Ukrainian, Simplified Chinese, Hindi, Korean, Bengali, Thai and Lithuanian;
+- native Light title-bar crops in active and inactive states.
+
+The title-bar regression test reapplies the Light caption styling on the same visible form and verifies that the application path runs while the main handle, icon and `ClientSize` remain unchanged. Screenshots include the native icon and caption buttons; tests intentionally avoid pixel-perfect assertions against OS-owned rendering.
+
+GitHub-hosted CI does not change physical monitor settings or cover every Windows build. The Light DWM request, unsupported-attribute fallback, active/inactive states and non-client repaint path are deterministic. Final physical 125/150% DPI, custom Windows accent combinations, multi-monitor movement and native-speaker glyph/wording appearance should still be spot-checked before a stable release.

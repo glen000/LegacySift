@@ -5,7 +5,7 @@ namespace LegacySift
     internal static partial class L10n
     {
         private static readonly Dictionary<string, string> Ko = Make(
-            "AppTitle", "LegacySift 0.2.2-alpha — 오래된 폴더를 안전하게 정리",
+            "AppTitle", "LegacySift 0.2.3-alpha — 오래된 폴더를 안전하게 정리",
             "TabWork", "비교 및 정리",
             "TabHelp", "사용 안내 및 안전",
             "LanguageButton", "언어…",
